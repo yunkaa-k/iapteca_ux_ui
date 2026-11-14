@@ -1,41 +1,29 @@
 services:
-  app:
-    image: bouncytorch/iapteca:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - MONGODB_URI=mongodb://mongo:27017/iapteca?replicaSet=rs0&directConnection=true
-    depends_on:
-      mongo:
-        condition: service_healthy
-
   mongo:
     image: mongo:7.0
-    restart: always
+    restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?Run scripts/setup-local.ps1 first}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?Run scripts/setup-local.ps1 first}
+      MONGO_INITDB_DATABASE: admin
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:?Run scripts/setup-local.ps1 first}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?Run scripts/setup-local.ps1 first}
     volumes:
-      - mongo_data:/data/db
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+      - iapteca_ux_ui_mongo_data:/data/db
+      - ./.local/mongo-keyfile:/run/secrets/mongo-keyfile:ro
+      - ./scripts/mongo-entrypoint.sh:/usr/local/bin/local-mongo-entrypoint.sh:ro
+      - ./scripts/mongo-init-user.sh:/docker-entrypoint-initdb.d/02-create-app-user.sh:ro
+      - ./scripts/mongo-healthcheck.sh:/usr/local/bin/local-mongo-healthcheck.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/local-mongo-entrypoint.sh"]
     healthcheck:
-      test: |
-        mongosh --quiet --eval "
-          try {
-            var status = rs.status();
-            if (status.ok && (status.members[0].stateStr === 'PRIMARY')) {
-              quit(0);
-            }
-          } catch (e) {
-            rs.initiate({
-              _id: 'rs0',
-              members: [{ _id: 0, host: 'localhost:27017' }]
-            });
-          }
-          quit(1);
-        "
+      test: ["CMD", "/bin/bash", "/usr/local/bin/local-mongo-healthcheck.sh"]
       interval: 5s
-      timeout: 5s
-      retries: 20
+      timeout: 10s
+      retries: 30
+      start_period: 30s
 
 volumes:
-  mongo_data:
+  iapteca_ux_ui_mongo_data:
+    name: iapteca_ux_ui_mongo_data

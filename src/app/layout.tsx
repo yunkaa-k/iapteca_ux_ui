@@ -1,12 +1,14 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from '@/components/Header';
 import { AuthProvider } from '@/components/AuthProvider';
+import { Footer } from '@/components/Footer';
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-sans",
-  subsets: ["latin"],
+const jakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-iapteca",
+  subsets: ["latin", "cyrillic-ext"],
+  weight: ["400", "500", "600", "700"],
   display: 'swap',
 });
 
@@ -27,11 +29,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uk" className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
+    <html lang="uk" className={`${jakartaSans.variable} ${geistMono.variable}`}>
       <body className="antialiased">
         <AuthProvider>
           <Header />
-          <main>{children}</main>
+          <a className="skipLink" href="#main-content">Перейти до основного вмісту</a>
+          <main id="main-content">{children}</main>
+          <Footer />
           <Toaster />
         </AuthProvider>
       </body>

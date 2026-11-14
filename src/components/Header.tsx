@@ -1,51 +1,80 @@
 'use client';
+
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useCartStore } from '@/lib/store/cartStore';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CartDrawer } from './CartDrawer';
-import { ShoppingCart, User, LogOut, LayoutDashboard, LogIn } from 'lucide-react';
+import { LayoutDashboard, LogOut, User } from 'lucide-react';
+import styles from './Header.module.css';
 
 export function Header() {
   const { user, logout } = useAuthStore();
-  const itemsCount = useCartStore(s => s.items.reduce((a, i) => a + i.quantity, 0));
+  const itemsCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0));
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background">
-      <div className="container mx-auto flex h-14 items-center justify-between px-4">
-        <Link href="/" className="font-bold text-lg">iApteca</Link>
-        <div className="flex gap-2">
-          <CartDrawer>
-            <Button variant="ghost" size="sm" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {itemsCount > 0 && <span className="absolute -top-1 -right-1 bg-primary text-white rounded-full text-[10px] w-4 h-4 flex items-center justify-center font-sans">{itemsCount}</span>}
-            </Button>
-          </CartDrawer>
+    <header className={styles.header}>
+      <div className={styles.inner}>
+        <div className={styles.brandAndNav}>
+          <Link href="/" className={styles.brand} aria-label="iApteca — на головну">
+            <Image src="/images/home/brand-emblem.svg" alt="" width={30} height={30} aria-hidden="true" />
+            <span>iApteca</span>
+          </Link>
+
+          <nav className={styles.navigation} aria-label="Головна навігація">
+            <Link href="/catalog">Каталог</Link>
+            <Link href="/catalog">Аналоги</Link>
+            <Link href="/checkout">Рецепт</Link>
+            <Link href="/#delivery-info">Доставка</Link>
+            <Link href="/#about-iapteca">Про нас</Link>
+          </nav>
+        </div>
+
+        <div className={styles.actions}>
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm"><User className="h-4 w-4 mr-2" /> Акаунт</Button>
+                <button className={styles.iconButton} type="button" aria-label="Меню профілю">
+                  <Image src="/images/home/profile.svg" alt="" width={28} height={28} aria-hidden="true" />
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center"><User className="h-4 w-4 mr-2" /> Профіль</Link>
+                  <Link href="/profile" className="flex items-center"><User className="mr-2 h-4 w-4" /> Профіль</Link>
                 </DropdownMenuItem>
                 {user.role === 'ADMIN' && (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center"><LayoutDashboard className="h-4 w-4 mr-2" /> Адмін</Link>
+                    <Link href="/admin" className="flex items-center"><LayoutDashboard className="mr-2 h-4 w-4" /> Адмін</Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                  <LogOut className="h-4 w-4 mr-2" /> Вийти
+                <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" /> Вийти
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild size="sm">
-              <Link href="/login" className="flex items-center"><LogIn className="h-4 w-4 mr-2" /> Увійти</Link>
-            </Button>
+            <Link className={styles.iconButton} href="/login" aria-label="Увійти або створити акаунт">
+              <Image src="/images/home/profile.svg" alt="" width={28} height={28} aria-hidden="true" />
+            </Link>
           )}
+
+          <Link className={styles.iconButton} href={user ? '/profile?tab=favorites' : '/login'} aria-label="Обране">
+            <Image src="/images/home/heart-header.svg" alt="" width={28} height={28} aria-hidden="true" />
+          </Link>
+
+          <CartDrawer>
+            <button className={styles.cartButton} type="button" aria-label={`Кошик, товарів: ${itemsCount}`}>
+              <Image src="/images/home/cart-header.svg" alt="" width={32} height={32} aria-hidden="true" />
+              <span>Кошик</span>
+              <span className={styles.cartCount} aria-hidden="true">{itemsCount}</span>
+            </button>
+          </CartDrawer>
+
+          <button className={styles.languageButton} type="button" aria-label="Мова інтерфейсу: українська">
+            <span>UA</span>
+            <Image src="/images/home/language-chevron.svg" alt="" width={24} height={24} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </header>
