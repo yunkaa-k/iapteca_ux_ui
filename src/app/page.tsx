@@ -1,40 +1,48 @@
+import { HomePage, type FeaturedMedication } from '@/components/HomePage';
 import { connectDB, MedicationModel } from '@/lib/db';
-import { ProductCard } from '@/components/ProductCard';
-import { SearchAndFilters } from '@/components/SearchAndFilters';
-import { Pagination } from '@/components/Pagination';
-import { Suspense } from 'react';
-import { Medication } from '@/lib/types';
-import { logger } from '@/lib/logger';
+import type { Medication } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+const featuredProducts = [
+  { match: /nurofen|нурофен/i, image: '/images/home/product-nurofen-200.png', summary: '200 мг · 24 табл.' },
+  { match: /ibuprofen.?darn|ібупрофен.?дарн|ибупрофен.?дарн/i, image: '/images/home/product-ibuprofen-darnytsia.png', summary: '200 мг · 20 табл.' },
+  { match: /paracetamol|парацетамол/i, image: '/images/home/product-paracetamol-500.png', summary: '500 мг · 10 табл.' },
+  { match: /citramon.?darn|цитрамон.?дарн/i, image: '/images/home/product-citramon-darnytsia.png', summary: '10 табл.' },
+];
+
+export default async function Home() {
   await connectDB();
-  const sp = await searchParams;
-  const page = Number(sp.page) || 1;
-  const limit = 20;
-  const filter: Record<string, unknown> = { isDeleted: { $ne: true } };
-  if (sp.search) {
-    filter.name = { $regex: sp.search, $options: 'i' };
-    logger.info('medications.searched', { query: sp.search });
+
+  const names = featuredProducts.map(({ match }) => ({ name: { $regex: match } }));
+  const matching = await MedicationModel.find({ isDeleted: { $ne: true }, $or: names }).lean();
+  const fallback = await MedicationModel.find({ isDeleted: { $ne: true } })
+    .sort({ createdAt: -1 })
+    .limit(8)
+    .lean();
+
+  const selected: Array<{
+    medication: (typeof matching)[number];
+    imageOverride?: string;
+    summary: string;
+  }> = featuredProducts.flatMap((spec) => {
+    const medication = matching.find((item) => spec.match.test(item.name));
+    return medication ? [{ medication, imageOverride: spec.image, summary: spec.summary }] : [];
+  });
+
+  for (const medication of fallback) {
+    if (selected.length >= 4) break;
+    if (selected.some((item) => item.medication._id.toString() === medication._id.toString())) continue;
+    selected.push({
+      medication,
+      summary: medication.description,
+    });
   }
-  if (sp.category) filter.category = sp.category;
-  if (sp.inStock === 'true') filter.stock = { $gt: 0 };
 
-  const sort: Record<string, 1 | -1> = sp.sort === 'price_asc' ? { price: 1 } : sp.sort === 'price_desc' ? { price: -1 } : { createdAt: -1 };
-  const total = await MedicationModel.countDocuments(filter);
-  const medications = (await MedicationModel.find(filter).sort(sort).skip((page - 1) * limit).limit(limit).lean()) as unknown as Medication[];
+  const serializable = selected.map((item) => ({
+    ...item,
+    medication: JSON.parse(JSON.stringify(item.medication)) as Medication,
+  })) satisfies FeaturedMedication[];
 
-  return (
-    <div className="container mx-auto py-6 px-4 space-y-6">
-      <h1 className="text-2xl font-bold">Каталог iApteca</h1>
-      <Suspense><SearchAndFilters /></Suspense>
-      <div className="text-sm opacity-70">Знайдено: {total}</div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {medications.map((m) => <ProductCard key={m._id.toString()} medication={JSON.parse(JSON.stringify(m)) as Medication} />)}
-        {medications.length === 0 && <p className="col-span-full py-10 text-center">Немає товарів</p>}
-      </div>
-      <Pagination currentPage={page} totalPages={Math.ceil(total / limit)} />
-    </div>
-  );
+  return <HomePage featuredMedications={serializable} />;
 }

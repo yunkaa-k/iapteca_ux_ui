@@ -32,6 +32,16 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# Local MongoDB credentials, key files, data and backups
+/.local/
+/mongo-data/
+/backups/
+*.dump
+*.bson
+*.bson.gz
+*.archive
 
 # vercel
 .vercel
