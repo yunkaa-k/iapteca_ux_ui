@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   min-width: 0;
-  min-height: 330px;
+  min-height: 308px;
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
@@ -32,17 +32,20 @@
   object-fit: contain;
 }
 
+.prescriptionMedia { display: flex; flex-direction: column; gap: 8px; }
+.prescriptionMedia .featuredImage { height: 96px; }
+.prescriptionBadge { display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; min-height: 28px; padding: 4px 8px; border-radius: 14px; background: var(--iapteca-warning-surface); color: var(--iapteca-warning-ink); font-size: 14px; line-height: 20px; }
+.prescriptionBadge > span { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--iapteca-warning); }
+
 .featuredTitle {
-  display: -webkit-box;
+  display: block;
   min-height: 24px;
   overflow: hidden;
   color: var(--iapteca-text);
   font-size: 16px;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 24px;
   text-decoration: none;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
 }
 
 .featuredTitle:hover {
@@ -75,6 +78,8 @@
 .featuredAvailability img {
   flex: 0 0 8px;
 }
+
+.featuredCard:has(.prescriptionMedia) .featuredAvailability { min-height: 20px; }
 
 .featuredOutOfStock {
   color: var(--iapteca-error-ink);
@@ -122,8 +127,8 @@
 .favoriteButton {
   position: absolute;
   z-index: 1;
-  top: 32px;
-  right: 32px;
+  top: 12px;
+  right: 20px;
   display: inline-flex;
   width: 40px;
   height: 40px;
@@ -142,12 +147,12 @@
 }
 
 .favoriteActive {
-  background: #fff0f2;
-  border-color: #ffd7e0;
+  background: #ebf2ff;
+  border-color: #0056d2;
 }
 
 .favoriteActive img {
-  filter: invert(22%) sepia(83%) saturate(3812%) hue-rotate(332deg) brightness(95%) contrast(95%);
+  filter: brightness(0) saturate(100%) invert(24%) sepia(99%) saturate(3200%) hue-rotate(209deg);
 }
 
 .srOnly {

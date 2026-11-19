@@ -26,6 +26,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       <Button
         variant="outline"
         size="icon"
+        aria-label="Попередня сторінка"
         disabled={currentPage <= 1}
         onClick={() => router.push(createPageUrl(currentPage - 1))}
       >
@@ -39,6 +40,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       <Button
         variant="outline"
         size="icon"
+        aria-label="Наступна сторінка"
         disabled={currentPage >= totalPages}
         onClick={() => router.push(createPageUrl(currentPage + 1))}
       >

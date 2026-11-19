@@ -8,10 +8,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { CartDrawer } from './CartDrawer';
 import { LayoutDashboard, LogOut, User } from 'lucide-react';
 import styles from './Header.module.css';
+import { useFavoritesStore } from '@/lib/store/favoritesStore';
+import { useHydrated } from '@/lib/useHydrated';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export function Header() {
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const itemsCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0));
+  const favoritesCount = useFavoritesStore((state) => state.items.length);
+  const hydrated = useHydrated();
+  const displayedCount = hydrated ? itemsCount : 0;
 
   return (
     <header className={styles.header}>
@@ -48,7 +56,10 @@ export function Header() {
                     <Link href="/admin" className="flex items-center"><LayoutDashboard className="mr-2 h-4 w-4" /> Адмін</Link>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => logout()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                <DropdownMenuItem onClick={async () => {
+                  try { await logout(); router.refresh(); }
+                  catch { toast.error('Не вдалося вийти. Спробуйте ще раз.'); }
+                }} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" /> Вийти
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -59,15 +70,15 @@ export function Header() {
             </Link>
           )}
 
-          <Link className={styles.iconButton} href={user ? '/profile?tab=favorites' : '/login'} aria-label="Обране">
+          <Link className={styles.iconButton} href="/favorites" aria-label={`Обране, товарів: ${hydrated ? favoritesCount : 0}`}>
             <Image src="/images/home/heart-header.svg" alt="" width={28} height={28} aria-hidden="true" />
           </Link>
 
           <CartDrawer>
-            <button className={styles.cartButton} type="button" aria-label={`Кошик, товарів: ${itemsCount}`}>
+            <button className={styles.cartButton} type="button" aria-label={`Кошик, товарів: ${displayedCount}`}>
               <Image src="/images/home/cart-header.svg" alt="" width={32} height={32} aria-hidden="true" />
               <span>Кошик</span>
-              <span className={styles.cartCount} aria-hidden="true">{itemsCount}</span>
+              <span className={styles.cartCount} aria-hidden="true">{displayedCount}</span>
             </button>
           </CartDrawer>
 

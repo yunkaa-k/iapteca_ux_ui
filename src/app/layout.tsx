@@ -1,20 +1,15 @@
-import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from '@/components/Header';
 import { AuthProvider } from '@/components/AuthProvider';
 import { Footer } from '@/components/Footer';
 import { Toaster } from "@/components/ui/sonner";
 
-const jakartaSans = Plus_Jakarta_Sans({
+const manrope = localFont({
+  src: "./fonts/Manrope-Variable.ttf",
   variable: "--font-iapteca",
-  subsets: ["latin", "cyrillic-ext"],
-  weight: ["400", "500", "600", "700"],
-  display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
+  weight: "400 700",
+  style: "normal",
   display: 'swap',
 });
 
@@ -29,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uk" className={`${jakartaSans.variable} ${geistMono.variable}`}>
+    <html lang="uk" className={manrope.variable}>
       <body className="antialiased">
         <AuthProvider>
           <Header />

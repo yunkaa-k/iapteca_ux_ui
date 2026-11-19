@@ -126,9 +126,11 @@ export function HomePage({ featuredMedications }: { featuredMedications: Feature
                 <Link className={styles.kitImageLink} href={`/kits?kit=${kit.id}`} aria-label={`Переглянути: ${kit.name}`} prefetch={false}>
                   <Image src={kit.image} alt={kit.name} fill sizes="(min-width: 1280px) 255px, 22vw" />
                 </Link>
-                <Link className={styles.kitName} href={`/kits?kit=${kit.id}`} prefetch={false}>{kit.name}</Link>
-                <p className={styles.kitSummary}>{kit.summary}</p>
-                <p className={styles.availability}><Image src="/images/home/availability-dot.svg" alt="" width={8} height={8} aria-hidden="true" />В наявності</p>
+                <div className={styles.kitDetails}>
+                  <Link className={styles.kitName} href={`/kits?kit=${kit.id}`} prefetch={false}>{kit.name}</Link>
+                  <p className={styles.kitSummary}>{kit.summary}</p>
+                  <p className={styles.availability}><Image src="/images/home/availability-dot.svg" alt="" width={8} height={8} aria-hidden="true" />В наявності</p>
+                </div>
                 <div className={styles.kitFooter}>
                   <strong>{kit.price} грн</strong>
                   <Link className={styles.kitAction} href={`/kits?kit=${kit.id}`} aria-label={`Переглянути аптечку: ${kit.name}`} prefetch={false}>

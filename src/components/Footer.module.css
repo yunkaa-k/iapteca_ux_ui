@@ -10,14 +10,15 @@
   min-height: 236px;
   flex-direction: column;
   margin: 0 auto;
-  padding: 32px 0 18px;
+  gap: 20px;
+  padding: 32px 0 24px;
 }
 
 .mainRow {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 32px;
-  flex: 1 1 auto;
+  grid-template-columns: 340fr 215fr 250fr 285fr;
+  gap: 48px;
+  padding-bottom: 24px;
 }
 
 .brandBlock {
@@ -36,10 +37,10 @@
 }
 
 .brandBlock p {
-  margin: 10px 0 0;
-  color: #d7e2ee;
-  font-size: 13px;
-  line-height: 20px;
+  margin: 12px 0 0;
+  color: #d2e1f2;
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .column {
@@ -50,7 +51,7 @@
 }
 
 .column h2 {
-  margin: 0 0 2px;
+  margin: 0 0 4px;
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -58,9 +59,9 @@
 }
 
 .column a {
-  color: #d7e2ee;
-  font-size: 13px;
-  line-height: 20px;
+  color: #f4f7f9;
+  font-size: 14px;
+  line-height: 24px;
   text-decoration: none;
 }
 
@@ -81,9 +82,10 @@
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  padding-top: 14px;
-  border-top: 1px solid rgb(215 226 238 / 22%);
-  color: #b7c5d8;
+  min-height: 45px;
+  padding-top: 20px;
+  border-top: 1px solid #354b67;
+  color: #aac0d9;
   font-size: 12px;
   line-height: 19px;
 }

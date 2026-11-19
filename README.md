@@ -21,6 +21,8 @@ iApteca — учебный проект интернет-аптеки на Next.
 
 ## Проверки
 
+Вход: `/login`, регистрация: `/register`; оба сценария работают только по email. Для существующей локальной БД перед первым созданием email-аккаунтов выполните `node scripts/prepare-email-auth.mjs`. Подробности сессий и ограничений отправки писем: [docs/authentication.md](docs/authentication.md).
+
 ```powershell
 pnpm test:run
 pnpm exec tsc --noEmit

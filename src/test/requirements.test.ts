@@ -99,7 +99,7 @@ describe('iApteca Requirements Tests', () => {
 
         const req = new Request('http://localhost/api/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ phone: '+380630000000', password: 'SuperSecret123', name: 'John' }),
+            body: JSON.stringify({ email: 'test@example.test', password: 'SuperSecret123', name: 'Test', consent: true }),
         });
 
         await registerPost(req);

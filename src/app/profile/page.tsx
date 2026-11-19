@@ -14,7 +14,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-8">
-      <h1 className="text-2xl font-bold">Профіль: {user.phone}</h1>
+      <h1 className="text-2xl font-bold">Профіль: {user.name || user.email || user.phone}</h1>
       <div className="space-y-4">
         <h2 className="text-xl font-semibold flex items-center gap-2"><Package className="w-5 h-5" /> Мої замовлення</h2>
         {orders.length === 0 ? <p className="opacity-50">У вас ще немає замовлень</p> : (
