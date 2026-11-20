@@ -1,11 +1,20 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProfileAccount } from '@/components/ProfileAccount';
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }) }));
+const navigation = vi.hoisted(() => ({ refresh: vi.fn(), replace: vi.fn(), push: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => navigation }));
 const user = { _id: 'owner', name: 'Олена', email: 'test@example.test', role: 'CUSTOMER' as const, isBanned: false };
 const view = () => render(<ProfileAccount user={user}><p>Existing orders</p></ProfileAccount>);
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
 describe('account design feedback', () => {
+  it('keeps account navigation in the URL when switching between profile and orders', () => {
+    view();
+    fireEvent.click(screen.getByRole('button', { name: 'Мої замовлення' }));
+    expect(navigation.push).toHaveBeenCalledWith('/profile?tab=orders');
+    expect(screen.getByText('Existing orders')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Мій профіль' }));
+    expect(navigation.push).toHaveBeenCalledWith('/profile');
+  });
   it('shows a dismissible floating save notification', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: { ...user, name: 'Олена Коваль' } }) }));
     view(); fireEvent.click(screen.getByRole('button', { name: 'Редагувати' }));

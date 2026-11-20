@@ -9,8 +9,10 @@ import { useAuthStore } from '@/lib/store/authStore';
 import { normalizeEmail, validateEmailAuth, type AuthFieldErrors } from '@/lib/authValidation';
 import styles from './AuthForm.module.css';
 
-export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
+export function AuthForm({ mode, returnTo }: { mode: 'login' | 'register'; returnTo?: string }) {
   const registration = mode === 'register';
+  const prescriptionReturn = returnTo === '/cart/prescription';
+  const returnQuery = prescriptionReturn ? '?returnTo=%2Fcart%2Fprescription' : '';
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
   const [identifier, setIdentifier] = useState('');
@@ -50,7 +52,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       }
       setUser(data.user);
       setPassword('');
-      router.replace('/');
+      router.replace(prescriptionReturn ? '/cart/prescription' : '/');
       router.refresh();
     } catch {
       setError('Немає зв’язку із сервером. Перевірте підключення та спробуйте ще раз.');
@@ -63,12 +65,12 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     <div className={`${styles.page} ${registration ? styles.registrationPage : ''}`}>
       <section className={`${styles.card} ${registration ? styles.registrationCard : ''}`} aria-labelledby="auth-title">
         <nav className={styles.tabs} aria-label="Вхід і реєстрація">
-          <Link href="/login" aria-current={!registration ? 'page' : undefined}>Вхід</Link>
-          <Link href="/register" aria-current={registration ? 'page' : undefined}>Реєстрація</Link>
+          <Link href={`/login${returnQuery}`} aria-current={!registration ? 'page' : undefined}>Вхід</Link>
+          <Link href={`/register${returnQuery}`} aria-current={registration ? 'page' : undefined}>Реєстрація</Link>
         </nav>
         <div className={styles.heading}>
-          <h1 id="auth-title">{registration ? 'Приєднуйтеся до iApteca' : 'З поверненням!'}</h1>
-          <p>{registration ? 'Зберігайте обране, переглядайте замовлення та оформлюйте покупки швидше.' : 'Увійдіть, щоб переглядати свої замовлення та збережені товари.'}</p>
+          <h1 id="auth-title">{registration ? 'Приєднуйтеся до iApteca' : prescriptionReturn ? 'Увійдіть, щоб продовжити' : 'З поверненням!'}</h1>
+          <p>{prescriptionReturn ? 'Збережемо заявку у «Мої замовлення». Після входу повернемо вас до прикріпленого рецепта.' : registration ? 'Зберігайте обране, переглядайте замовлення та оформлюйте покупки швидше.' : 'Увійдіть, щоб переглядати свої замовлення та збережені товари.'}</p>
         </div>
         <form className={styles.form} onSubmit={submit} noValidate aria-busy={pending}>
           {error && <p className={styles.banner} role="alert">{error}</p>}

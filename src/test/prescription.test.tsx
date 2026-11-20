@@ -1,16 +1,20 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PrescriptionVerification } from '@/components/PrescriptionVerification';
-import CheckoutPage from '@/app/checkout/page';
+import { CheckoutContent as CheckoutPage } from '@/components/CheckoutContent';
+import { useAuthStore } from '@/lib/store/authStore';
+import { usePrescriptionRequestStore } from '@/lib/store/prescriptionRequestStore';
 import { useCartStore, type CartItem } from '@/lib/store/cartStore';
 import { prescriptionFor, prescriptionsApproved, REVIEW_DELAY, usePrescriptionStore } from '@/lib/store/prescriptionStore';
 
 vi.mock('@/lib/useHydrated', () => ({ useHydrated: () => true }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
 const rx: CartItem = { _id: 'rx-one', name: 'Препарат один', description: '500 мг · 10 капс.', category: 'Test', manufacturer: 'Test', price: 120, stock: 5, quantity: 1, requiresPrescription: true };
 const second: CartItem = { ...rx, _id: 'rx-two', name: 'Препарат два' };
 beforeEach(() => {
   useCartStore.setState({ items: [rx] });
+  useAuthStore.setState({ user: { _id: 'test-owner', role: 'CUSTOMER', isBanned: false } });
+  usePrescriptionRequestStore.setState({ requests: [] });
   usePrescriptionStore.getState().clear();
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
@@ -63,7 +67,7 @@ describe('demo prescription verification', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Надіслати на перевірку' }));
     expect(screen.queryByRole('link', { name: 'Перейти до оформлення' })).not.toBeInTheDocument();
     act(() => vi.advanceTimersByTime(REVIEW_DELAY));
-    expect(screen.getByRole('link', { name: 'Перейти до оформлення' })).toHaveAttribute('href', '/checkout');
+    expect(screen.getByRole('link', { name: 'Перейти до оформлення' })).toHaveAttribute('href', `/checkout?request=${usePrescriptionRequestStore.getState().requests[0].id}`);
   });
   it('rejects unsupported files and offers reuse for the second prescription', () => {
     useCartStore.setState({ items: [rx, second] });

@@ -79,4 +79,17 @@ describe('auth forms', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Немає зв’язку із сервером');
     expect(screen.getByRole('button', { name: /^Увійти$/ })).toBeEnabled();
   });
+
+  it.each([
+    ['/cart/prescription', '/cart/prescription'],
+    ['https://example.invalid/redirect', '/'],
+  ])('returns only to an allowed local prescription route (%s)', async (returnTo, expected) => {
+    const user = { _id: 'user1', email: 'person@example.test', role: 'CUSTOMER', isBanned: false };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user }) }));
+    render(<AuthForm mode="login" returnTo={returnTo} />);
+    fireEvent.change(screen.getByLabelText('Електронна пошта'), { target: { value: 'person@example.test' } });
+    fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'StrongPassword123' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Увійти$/ }));
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith(expected));
+  });
 });

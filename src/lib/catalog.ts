@@ -37,7 +37,7 @@ const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$
 
 export function catalogQuery(params: URLSearchParams, defaultLimit = 20) {
   const search = text(params, 'search');
-  const filter: Record<string, unknown> = { isDeleted: { $ne: true } };
+  const filter: Record<string, unknown> = { isDeleted: { $ne: true }, inventoryOnly: { $ne: true } };
   if (search) filter.$or = ['name', 'activeIngredient'].map((key) => ({ [key]: { $regex: escapeRegex(search), $options: 'i' } }));
   if (text(params, 'category')) filter.category = text(params, 'category');
   if (params.get('inStock') === 'true') filter.stock = { $gt: 0 };
@@ -59,6 +59,6 @@ export function catalogQuery(params: URLSearchParams, defaultLimit = 20) {
   const limitValue = Number(params.get('limit'));
   const limit = Number.isSafeInteger(limitValue) && limitValue > 0 ? Math.min(limitValue, 100) : defaultLimit;
   const sort: Record<string, 1 | -1> = params.get('sort') === 'price_desc' ? { price: -1, _id: 1 } : params.get('sort') === 'newest' ? { createdAt: -1, _id: 1 } : { price: 1, _id: 1 };
-  const hasFilters = Object.keys(filter).some((key) => key !== 'isDeleted' && key !== '$or');
+  const hasFilters = Object.keys(filter).some((key) => key !== 'isDeleted' && key !== 'inventoryOnly' && key !== '$or');
   return { filter, sort, page, limit, search, hasFilters, minPrice, maxPrice };
 }

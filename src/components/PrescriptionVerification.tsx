@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/store/authStore';
+import { usePrescriptionRequestStore } from '@/lib/store/prescriptionRequestStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import { prescriptionFor, prescriptionsApproved, usePrescriptionStore } from '@/lib/store/prescriptionStore';
 import { useHydrated } from '@/lib/useHydrated';
@@ -11,9 +14,21 @@ import styles from './Prescription.module.css';
 
 const statusLabels = { attached: 'Рецепт прикріплено', reviewing: 'На перевірці', approved: 'Рецепт підтверджено', 'needs-new-photo': 'Потрібне нове фото' };
 
-export function PrescriptionVerification() {
-  const items = useCartStore(state => state.items);
-  const { entries, attach, remove, submit, settle } = usePrescriptionStore();
+export function PrescriptionVerification({ requestId, returnToDetails = false }: { requestId?: string; returnToDetails?: boolean }) {
+  const cartItems = useCartStore(state => state.items);
+  const draft = usePrescriptionStore();
+  const requests = usePrescriptionRequestStore();
+  const user = useAuthStore(state => state.user);
+  const authLoading = useAuthStore(state => state.isLoading);
+  const router = useRouter();
+  const [createdId, setCreatedId] = useState<string>();
+  const selectedId = requestId || createdId;
+  const request = requests.requests.find(r => r.id === selectedId && r.ownerId === user?._id && r.state === 'active');
+  const items = request ? request.items : selectedId ? [] : cartItems;
+  const entries = request ? request.entries : draft.entries;
+  const settle = selectedId ? requests.settle : draft.settle;
+  const attach = (item: typeof items[number], name: string) => request && user ? requests.replaceFile(request.id, user._id, item._id, name) : draft.attach(item, name);
+  const remove = (id: string) => request && user ? requests.removeFile(request.id, user._id, id) : draft.remove(id);
   const hydrated = useHydrated();
   const inputs = useRef<Record<string, HTMLInputElement | null>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -26,6 +41,8 @@ export function PrescriptionVerification() {
     return () => clearInterval(timer);
   }, [reviewing, settle]);
   if (!hydrated) return <div className={styles.page} role="status">Завантажуємо рецепти…</div>;
+  if (selectedId && authLoading && !user) return <div className={styles.page} role="status">Перевіряємо акаунт…</div>;
+  if (selectedId && !request) return <div className={styles.page}><h1>Заявка недоступна</h1><p className={styles.caption}>Увійдіть до свого акаунта або відкрийте чинну заявку з «Мої замовлення».</p><Link href="/profile?tab=orders" className={styles.primary}>Мої замовлення</Link></div>;
   if (!required.length) return <div className={styles.page}><h1>Перевірка рецепта</h1><p className={styles.caption}>У кошику немає препаратів, що потребують рецепта.</p><Link href="/cart" className={styles.primary}>До кошика</Link></div>;
 
   const approved = prescriptionsApproved(items, entries);
@@ -37,6 +54,13 @@ export function PrescriptionVerification() {
   const description = reviewing ? 'Статус збережено в «Мої замовлення». Ви можете повернутися до каталогу та робити інші покупки.' : approved ? 'Можна продовжити оформлення замовлення.' : needsPhoto ? 'На фото не видно всіх даних рецепта. Завантажте чіткіше фото або скан.' : multi ? 'Додайте фото або скан рецепта для кожного препарату зі списку.' : attached ? 'Перевірте, що прикріпили потрібний файл, і надішліть його фармацевту.' : 'Додайте фото або скан рецепта. Переконайтеся, що текст добре видно.';
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const files = [...new Set(required.map(item => prescriptionFor(item, entries)?.fileName).filter((name): name is string => !!name))];
+  function submitVerification() {
+    if (!user) { router.push('/login?returnTo=%2Fcart%2Fprescription'); return; }
+    if (request) { requests.submit(request.id, user._id); return; }
+    draft.submit(items);
+    const id = requests.create(user._id, items, usePrescriptionStore.getState().entries);
+    if (id) { setCreatedId(id); draft.clear(); router.replace(`/cart/prescription?request=${id}`); }
+  }
 
   return <div className={styles.page}>
     <div className={styles.introduction}><nav className={styles.breadcrumbs} aria-label="Навігаційний шлях"><Link href="/">Головна</Link> / <Link href="/cart">Кошик</Link> / Перевірка рецепта</nav><h1>Перевірка рецепта</h1></div>
@@ -77,8 +101,8 @@ export function PrescriptionVerification() {
         })}
         {multi && !reviewing && !approved && <p className={styles.caption}>Додано рецепти для {attached} з {required.length} препаратів</p>}
         <div className={styles.navigation}>
-          <Link href={reviewing || approved || needsPhoto ? '/profile?tab=orders' : '/cart'}>{reviewing || approved || needsPhoto ? '← До моїх замовлень' : multi ? '← До кошика' : '← Повернутися'}</Link>
-          {approved ? <Link className={styles.primary} href="/checkout">Перейти до оформлення</Link> : !reviewing && (attached > 0 || multi) && <button className={styles.primary} disabled={!canSubmit} onClick={() => submit(items)}>Надіслати на перевірку</button>}
+          <Link href={request && returnToDetails ? `/profile?tab=orders&request=${request.id}` : request || reviewing || approved || needsPhoto ? '/profile?tab=orders' : '/cart'}>{request || reviewing || approved || needsPhoto ? '← До моїх замовлень' : multi ? '← До кошика' : '← Повернутися'}</Link>
+          {approved ? <Link className={styles.primary} href={request ? `/checkout?request=${request.id}` : '/checkout'}>Перейти до оформлення</Link> : !reviewing && (attached > 0 || multi) && <button className={styles.primary} disabled={!canSubmit} onClick={submitVerification}>Надіслати на перевірку</button>}
         </div>
       </section>
       <aside className={styles.summary} aria-label="Ваше замовлення"><h2>Ваше замовлення</h2><dl>

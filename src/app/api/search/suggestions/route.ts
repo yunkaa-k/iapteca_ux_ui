@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     if (!products.length && query.length <= 32) {
       // The local teaching catalog is small. Keep the dictionary lookup bounded;
       // do not derive corrections from deleted products or an external drug list.
-      const dictionary = await MedicationModel.find({ isDeleted: { $ne: true } }).select('name activeIngredient').sort({ _id: 1 }).limit(300).lean();
+      const dictionary = await MedicationModel.find({ isDeleted: { $ne: true }, inventoryOnly: { $ne: true } }).select('name activeIngredient').sort({ _id: 1 }).limit(300).lean();
       correction = findSpellingCorrection(query, dictionary.flatMap((item) => [String(item.name || ''), String(item.activeIngredient || '')]));
     }
     return NextResponse.json({ products, ingredients, correction }, { headers });

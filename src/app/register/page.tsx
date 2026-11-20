@@ -2,6 +2,7 @@ import { AuthForm } from '@/components/AuthForm';
 
 export const metadata = { title: 'Реєстрація | iApteca' };
 
-export default function RegisterPage() {
-  return <AuthForm mode="register" />;
+export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
+  const { returnTo } = await searchParams;
+  return <AuthForm mode="register" returnTo={returnTo} />;
 }

@@ -30,7 +30,7 @@ export function FavoritesPage() {
     try {
       // Recheck current price, deletion and availability before touching the cart.
       const current = await Promise.all(items.map(async ({ medication }) => {
-        const response = await fetch(`/api/medications/${medication._id}`, { cache: 'no-store' });
+        const response = await fetch(`/api/${medication.kind === 'bundle' ? 'bundles' : 'medications'}/${medication._id}`, { cache: 'no-store' });
         if (response.status === 404) return null;
         if (!response.ok) throw new Error('availability');
         return await response.json() as Medication;

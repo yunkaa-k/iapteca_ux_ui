@@ -24,7 +24,7 @@ describe('catalog queries', () => {
     const parsed = catalogQuery(new URLSearchParams('page=-3&limit=99999&minPrice=NaN&maxPrice=-100&form=invalid'));
     expect(parsed.page).toBe(1);
     expect(parsed.limit).toBe(100);
-    expect(parsed.filter).toEqual({ isDeleted: { $ne: true } });
+    expect(parsed.filter).toEqual({ isDeleted: { $ne: true }, inventoryOnly: { $ne: true } });
     expect(catalogQuery(new URLSearchParams('page=Infinity&limit=0')).page).toBe(1);
   });
 

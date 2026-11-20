@@ -29,7 +29,7 @@ export function Footer() {
 
           <nav className={styles.column} id="support" aria-label="Підтримка">
             <h2>Підтримка</h2>
-            <Link href="/#support">Часті запитання</Link>
+            <Link href="/faq">Часті запитання</Link>
             <Link href="/#contacts">Контакти</Link>
           </nav>
         </div>

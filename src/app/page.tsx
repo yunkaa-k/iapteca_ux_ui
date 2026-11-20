@@ -1,3 +1,4 @@
+import { getBundles } from '@/lib/bundle-data';
 import { HomePage, type FeaturedMedication } from '@/components/HomePage';
 import { connectDB, MedicationModel } from '@/lib/db';
 import type { Medication } from '@/lib/types';
@@ -44,5 +45,5 @@ export default async function Home() {
     medication: JSON.parse(JSON.stringify(item.medication)) as Medication,
   })) satisfies FeaturedMedication[];
 
-  return <HomePage featuredMedications={serializable} />;
+  return <HomePage featuredMedications={serializable} kits={(await getBundles()).slice(0, 4)} />;
 }

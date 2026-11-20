@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { connectDB, OrderModel, MedicationModel } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import mongoose from 'mongoose';
+import { inventoryLines } from '@/lib/bundles';
+import type { OrderItem } from '@/lib/types';
 import { logger } from '@/lib/logger';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,18 +19,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   try {
     const { status } = await req.json();
+    if (!['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].includes(status)) throw new Error('Некоректний статус.');
     const orderId = (await params).id;
     const oldOrder = await OrderModel.findById(orderId).session(session);
 
     if (!oldOrder) throw new Error('Order not found');
 
     if (status === 'CANCELLED' && oldOrder.status !== 'CANCELLED') {
-      for (const item of oldOrder.items) {
-        await MedicationModel.findByIdAndUpdate(item.medication, { $inc: { stock: item.quantity } }).session(session);
+      for (const item of oldOrder.items.flatMap((line: OrderItem) => inventoryLines(line))) {
+        const restored = await MedicationModel.findByIdAndUpdate(item.medication, { $inc: { stock: item.quantity } }).session(session);
+        if (!restored) throw new Error('Не вдалося повернути компонент на склад.');
       }
     }
     else if (oldOrder.status === 'CANCELLED' && status !== 'CANCELLED') {
-      for (const item of oldOrder.items) {
+      for (const item of oldOrder.items.flatMap((line: OrderItem) => inventoryLines(line))) {
         const med = await MedicationModel.findById(item.medication).session(session);
         if (!med || med.stock < item.quantity) {
           throw new Error(`Недостатньо товару для відновлення замовлення: ${med?.name || 'невідомий'}`);

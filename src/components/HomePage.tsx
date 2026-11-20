@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ProductCard } from '@/components/ProductCard';
-import type { Medication } from '@/lib/types';
+import type { Medication, BundleProduct } from '@/lib/types';
 import styles from './HomePage.module.css';
 
 export type FeaturedMedication = {
@@ -12,12 +12,7 @@ export type FeaturedMedication = {
 
 const popularSearches = ['ібупрофен', 'парацетамол', 'амоксицилін', 'дексаметазон', 'бісептол'];
 
-const kits = [
-  { id: 'travel', name: 'Аптечка «Для подорожі»', summary: 'Компактний набір у дорогу', price: 249, image: '/images/home/kit-travel.png' },
-  { id: 'home', name: 'Домашня аптечка', summary: 'Перша допомога вдома', price: 349, image: '/images/home/kit-home.png' },
-  { id: 'car', name: 'Аптечка для авто', summary: 'Набір для поїздок', price: 449, image: '/images/home/kit-car.png' },
-  { id: 'hiking', name: 'Аптечка для походів', summary: 'Набір для активного відпочинку', price: 329, image: '/images/home/kit-hiking.png' },
-];
+
 
 const categories = [
   { label: <>Застуда<br />та грип</>, query: 'Застуда та грип', image: '/images/home/category-cold.png', tone: 'cold' },
@@ -47,7 +42,7 @@ function SectionHeading({ title, href, linkText, id }: { title: string; href: st
   );
 }
 
-export function HomePage({ featuredMedications }: { featuredMedications: FeaturedMedication[] }) {
+export function HomePage({ featuredMedications, kits = [] }: { featuredMedications: FeaturedMedication[]; kits?: BundleProduct[] }) {
   return (
     <div className={styles.homePage}>
       <section className={styles.hero} aria-labelledby="home-heading">
@@ -122,18 +117,18 @@ export function HomePage({ featuredMedications }: { featuredMedications: Feature
           <SectionHeading id="featured-kits-heading" title="Готові аптечки" href="/kits" linkText="Усі аптечки" />
           <div className={styles.kitGrid}>
             {kits.map((kit) => (
-              <article className={styles.kitCard} key={kit.id}>
-                <Link className={styles.kitImageLink} href={`/kits?kit=${kit.id}`} aria-label={`Переглянути: ${kit.name}`} prefetch={false}>
-                  <Image src={kit.image} alt={kit.name} fill sizes="(min-width: 1280px) 255px, 22vw" />
+              <article className={styles.kitCard} key={kit.slug}>
+                <Link className={styles.kitImageLink} href={`/kits/${kit.slug}`} aria-label={`Переглянути: ${kit.name}`} prefetch={false}>
+                  <Image src={kit.image!} alt={kit.name} fill sizes="(min-width: 1280px) 255px, 22vw" />
                 </Link>
                 <div className={styles.kitDetails}>
-                  <Link className={styles.kitName} href={`/kits?kit=${kit.id}`} prefetch={false}>{kit.name}</Link>
-                  <p className={styles.kitSummary}>{kit.summary}</p>
-                  <p className={styles.availability}><Image src="/images/home/availability-dot.svg" alt="" width={8} height={8} aria-hidden="true" />В наявності</p>
+                  <Link className={styles.kitName} href={`/kits/${kit.slug}`} prefetch={false}>{kit.name}</Link>
+                  <p className={styles.kitSummary}>{kit.description}</p>
+                  <p className={styles.availability}><Image src="/images/home/availability-dot.svg" alt="" width={8} height={8} aria-hidden="true" />{kit.stock > 0 ? 'В наявності' : 'Немає в наявності'}</p>
                 </div>
                 <div className={styles.kitFooter}>
                   <strong>{kit.price} грн</strong>
-                  <Link className={styles.kitAction} href={`/kits?kit=${kit.id}`} aria-label={`Переглянути аптечку: ${kit.name}`} prefetch={false}>
+                  <Link className={styles.kitAction} href={`/kits/${kit.slug}`} aria-label={`Переглянути аптечку: ${kit.name}`} prefetch={false}>
                     <Image src="/images/home/cart-add.svg" alt="" width={20} height={20} aria-hidden="true" />
                   </Link>
                 </div>

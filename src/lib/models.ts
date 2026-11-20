@@ -1,5 +1,5 @@
 import { model, models, Schema } from 'mongoose';
-import { User, Medication, Order, OrderItem, Category } from './types';
+import { User, Medication, Order, OrderItem, Category, Bundle } from './types';
 
 const userSchema = new Schema<User>({
   phone: { type: String },
@@ -25,6 +25,7 @@ const categorySchema = new Schema<Category>({
 }, { timestamps: true });
 
 const medicationSchema = new Schema<Medication>({
+  inventoryOnly: { type: Boolean, default: false },
   name: { type: String, required: true },
   description: { type: String, required: true },
   price: { type: Number, required: true, min: 0 },
@@ -50,12 +51,33 @@ const orderItemSchema = new Schema<OrderItem>({
   medication: { type: String, required: true },
   quantity: { type: Number, required: true, min: 1 },
   price: { type: Number, required: true, min: 0 },
+  kind: { type: String, enum: ['bundle'] },
+  name: String, description: String, image: String, slug: String,
+  components: { type: [new Schema({ medication: { type: String, required: true }, quantity: { type: Number, required: true, min: 1 }, name: String }, { _id: false })], default: undefined },
 });
 
+const bundleSchema = new Schema<Bundle>({
+  slug: { type: String, required: true, unique: true },
+  name: { type: String, required: true }, description: { type: String, required: true }, purpose: String,
+  price: { type: Number, required: true, min: 0 }, image: String,
+  components: { type: [new Schema({ medication: { type: String, required: true }, quantity: { type: Number, required: true, min: 1 }, name: { type: String, required: true } }, { _id: false })], default: [] },
+  compositionConfirmed: { type: Boolean, default: false }, isDeleted: { type: Boolean, default: false },
+}, { timestamps: true });
+export const BundleModel = models.Bundle || model<Bundle>('Bundle', bundleSchema);
+
 const orderSchema = new Schema<Order>({
-  user: { type: String, required: true },
+  user: { type: String },
   items: { type: [orderItemSchema], required: true },
   total: { type: Number, required: true, min: 0 },
+  subtotal: { type: Number, min: 0 },
+  checkout: {
+    type: new Schema({
+      contact: { name: String, phone: String, email: String },
+      delivery: { method: { type: String, enum: ['pickup', 'courier'] }, pharmacyId: String, pharmacyName: String, city: String, address: String, fee: { type: Number, min: 0 } },
+      payment: { type: String, enum: ['on-receipt', 'online-after-confirmation'] },
+    }, { _id: false }),
+    required: false,
+  },
   status: { type: String, enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], default: 'PENDING' },
 }, { timestamps: true });
 

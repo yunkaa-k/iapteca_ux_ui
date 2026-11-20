@@ -7,6 +7,7 @@ import { useCartStore } from '@/lib/store/cartStore';
 import { Medication } from '@/lib/types';
 import Image from 'next/image';
 import { ShoppingCart, Eye } from 'lucide-react';
+import { productHref } from '@/lib/bundles';
 import styles from './ProductCard.module.css';
 import type { ReactNode } from 'react';
 import { useFavoritesStore } from '@/lib/store/favoritesStore';
@@ -47,19 +48,19 @@ export function ProductCard({ medication: m, variant = 'default', imageOverride,
 
     return (
       <article className={styles.featuredCard}>
-        <Link className={styles.featuredImageLink} href={`/product/${m._id}`} aria-label={`Переглянути препарат: ${m.name}`}>
+        <Link className={styles.featuredImageLink} href={productHref(m)} aria-label={`Переглянути ${m.kind === 'bundle' ? 'аптечку' : 'препарат'}: ${m.name}`}>
           <span className={m.requiresPrescription === true ? styles.prescriptionMedia : undefined}>
             {m.requiresPrescription === true && <span className={styles.prescriptionBadge}><span aria-hidden="true" />Потрібен рецепт</span>}
             <span className={styles.featuredImage}>
               {image ? <Image src={image} alt="" fill sizes="(min-width: 1280px) 255px, 22vw" /> : null}
             </span>
           </span>
-          <span className={styles.srOnly}>Відкрити сторінку препарату</span>
+          <span className={styles.srOnly}>Відкрити сторінку {m.kind === 'bundle' ? 'аптечки' : 'препарату'}</span>
         </Link>
 
         {favoriteButton}
 
-        <Link className={styles.featuredTitle} href={`/product/${m._id}`}>{m.name}</Link>
+        <Link className={styles.featuredTitle} href={productHref(m)}>{m.name}</Link>
         <p className={styles.featuredSummary}>{summary || m.description}</p>
         <p className={`${styles.featuredAvailability} ${m.stock <= 0 ? styles.featuredOutOfStock : ''}`}>
           <Image src="/images/home/availability-dot.svg" alt="" width={8} height={8} aria-hidden="true" />
@@ -89,7 +90,7 @@ export function ProductCard({ medication: m, variant = 'default', imageOverride,
   return (
     <Card className="relative flex flex-col h-full overflow-hidden hover:shadow-md transition-shadow group">
       {favoriteButton}
-      <Link href={`/product/${m._id}`} className="flex-1">
+      <Link href={productHref(m)} className="flex-1">
         <div className="aspect-square relative bg-muted flex items-center justify-center text-xs overflow-hidden">
           {m.image ? <Image src={m.image} alt={m.name} fill className="object-cover group-hover:scale-105 transition-transform" /> : 'Немає фото'}
           <Badge className="absolute top-2 left-2" variant={stock.v as "default" | "destructive" | "outline" | "secondary"}>{stock.l}</Badge>

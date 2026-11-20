@@ -10,6 +10,13 @@ export interface PrescriptionEntry {
   readyAt?: number;
 }
 export const REVIEW_DELAY = 8000;
+export function settlePrescriptionEntries(entries: Record<string, PrescriptionEntry>, now = Date.now()) {
+  return Object.fromEntries(Object.entries(entries).map(([id, entry]) => [id,
+    entry.status === 'reviewing' && entry.readyAt !== undefined && entry.readyAt <= now
+      ? { ...entry, readyAt: undefined, status: /blur|нечитабельн/i.test(entry.fileName) ? 'needs-new-photo' as const : 'approved' as const }
+      : entry,
+  ]));
+}
 export function prescriptionFor(item: CartItem, entries: Record<string, PrescriptionEntry>) {
   const entry = entries[item._id];
   return entry?.quantity === item.quantity ? entry : undefined;

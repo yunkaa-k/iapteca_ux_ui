@@ -1,0 +1,58 @@
+.page { width: min(1240px, calc(100% - 48px)); margin-inline: auto; padding: 40px 0 80px; color: var(--iapteca-heading); }
+.heading { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.detailHeading { margin-bottom: 32px; }
+.breadcrumbs { display: flex; gap: 3px; font-size: 13px; font-weight: 500; line-height: normal; color: var(--iapteca-muted); }
+.heading h1 { margin: 0; font-size: 32px; line-height: normal; font-weight: 700; }
+.heading p { margin: 0; font-size: 15px; color: var(--iapteca-muted); line-height: 25.5px; }
+.grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; }
+.card { display: flex; flex-direction: column; align-items: center; gap: 16px; height: 346px; min-width: 0; padding: 20px; border: 1px solid #deebf7; border-radius: 16px; background: var(--iapteca-surface); }
+.cardImage { position: relative; display: block; width: 100%; height: 160px; flex-shrink: 0; border-radius: 10px; }
+.cardImage img { object-fit: contain; border-radius: 10px; }
+.cardDetails { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.cardTitle { font-size: 18px; font-weight: 600; line-height: 20px; }
+.cardTitle:hover { color: var(--iapteca-primary); }
+.cardDetails p { margin: 0; color: var(--iapteca-muted); font-size: 14px; line-height: normal; }
+.availability { display: inline-flex; align-items: center; gap: 8px; height: 20px; font-size: 14px; font-weight: 400; line-height: 20px; color: var(--iapteca-success-ink); }
+.unavailable { color: var(--iapteca-muted); }
+.unavailableDot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.cardFooter { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto; height: 40px; }
+.cardFooter strong { font-size: 20px; line-height: normal; font-weight: 700; }
+.cartIcon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 20px; background: var(--secondary); cursor: pointer; }
+.cartIcon:hover:not(:disabled) { background: #dce8ff; }
+.purchaseLayout { display: grid; grid-template-columns: 488px minmax(0,1fr); gap: 24px; margin-bottom: 32px; }
+.gallery { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px; height: 456px; border: 1px solid var(--iapteca-border); border-radius: 20px; background: var(--iapteca-surface); }
+.galleryImage { position: relative; width: 412px; max-width: 100%; height: 288px; border-radius: 10px; }
+.galleryImage img { object-fit: cover; border-radius: 10px; }
+.gallery p { margin: 0; text-align: center; font-size: 13px; line-height: 20px; color: var(--iapteca-muted); }
+.purchase { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; padding: 24px; min-height: 456px; border-radius: 16px; background: var(--iapteca-surface); }
+.status { display: flex; align-items: center; gap: 12px; }
+.badge { display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; border-radius: 20px; color: var(--iapteca-primary); background: var(--secondary); font-size: 14px; }
+.specs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; width: 100%; margin: 0; }
+.specs dt, .price span { font-size: 13px; font-weight: 400; line-height: 20px; color: var(--iapteca-muted); }
+.specs dd { margin: 4px 0 0; font-size: 16px; font-weight: 500; line-height: 1.4; }
+.purchase > p { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.4; }
+.price { display: flex; flex-direction: column; gap: 4px; }
+.price strong { font-size: 32px; font-weight: 700; line-height: normal; }
+.purchaseActions { display: flex; align-items: center; gap: 12px; width: 100%; }
+.quantity { display: flex; align-items: center; flex-shrink: 0; height: 48px; width: 144px; border: 1px solid var(--iapteca-border); border-radius: 12px; }
+.quantity button, .quantity output { display: flex; align-items: center; justify-content: center; width: 48px; height: 44px; }
+.quantity button { font-size: 22px; color: var(--iapteca-primary); cursor: pointer; }
+.quantity output { font-size: 16px; font-weight: 600; }
+.primary { display: flex; align-items: center; justify-content: center; flex: 1; height: 48px; padding: 0 12px; border-radius: 12px; background: var(--iapteca-primary); color: white; font-size: 16px; font-weight: 600; line-height: 22px; cursor: pointer; }
+.primary:hover:not(:disabled) { background: var(--iapteca-primary-hover); }
+.favorite { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 48px; height: 48px; padding: 8px; border: 1px solid #deebf7; border-radius: 18px; background: white; box-shadow: 0 2px 7px rgb(33 61 102 / 12%); cursor: pointer; }
+.selected { border-color: #80b3ff; background: var(--secondary); }
+.fulfillment { display: flex; flex-direction: column; gap: 8px; width: 100%; margin: 0; padding-top: 8px; font-size: 14px; }
+.fulfillment div { display: flex; align-items: center; gap: 16px; }
+.fulfillment dt { width: 170px; flex-shrink: 0; font-weight: 500; line-height: 20px; }
+.fulfillment dd { margin: 0; color: var(--iapteca-muted); }
+.contents { padding: 24px; margin-bottom: 32px; border: 1px solid #deebf7; border-radius: 16px; background: white; }
+.contents h2, .recommendations h2 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; }
+.contents dl { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 0; }
+.contents dl > div { display: flex; justify-content: space-between; gap: 16px; padding-block: 10px; border-bottom: 1px solid var(--iapteca-background); }
+.contents dt { font-size: 16px; line-height: 1.4; font-weight: 500; }
+.contents dd { margin: 0; font-size: 15px; color: var(--iapteca-muted); }
+.recommendations { min-height: 472px; }
+.recommendations h2 { margin-bottom: 16px; }
+.page button:disabled { opacity: .5; cursor: not-allowed; }
+.page button:focus-visible, .page a:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 3px; }

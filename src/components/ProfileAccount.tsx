@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Check, X, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import type { User } from '@/lib/types';
 import styles from './ProfileAccount.module.css';
 
-export function ProfileAccount({ user, children, initialOrders = false }: { user: User; children: ReactNode; initialOrders?: boolean }) {
+export function ProfileAccount({ user, children, initialOrders = false, requestDetails = false }: { user: User; children: ReactNode; initialOrders?: boolean; requestDetails?: boolean }) {
   const router = useRouter();
   const [profile, setProfile] = useState(user);
   const [editing, setEditing] = useState(false);
@@ -41,21 +42,21 @@ export function ProfileAccount({ user, children, initialOrders = false }: { user
     finally { setPending(false); }
   }
   return <div className={styles.page}>
-    <nav className={styles.breadcrumbs} aria-label="Навігаційний шлях"><Link href="/">Головна</Link> / Особистий кабінет{orders && ' / Мої замовлення'}</nav>
-    <h1>{orders ? 'Мої замовлення' : 'Особистий кабінет'}</h1>
-    <p className={styles.subtitle}>{orders ? 'Переглядайте свої замовлення та статуси їх отримання.' : 'Керуйте особистими даними та переглядайте свої замовлення.'}</p>
+    <nav className={styles.breadcrumbs} aria-label="Навігаційний шлях"><Link href="/">Головна</Link> / Особистий кабінет{orders && ' / Мої замовлення'}{orders && requestDetails && ' / Заявка'}</nav>
+    <h1>{orders ? requestDetails ? 'Деталі заявки' : 'Мої замовлення' : 'Особистий кабінет'}</h1>
+    <p className={styles.subtitle}>{orders ? requestDetails ? 'Товари, прикріплений рецепт і результат його перевірки.' : 'Заявки на перевірку рецепта, оформлені замовлення та статуси їх отримання.' : 'Керуйте особистими даними та переглядайте свої замовлення.'}</p>
     {message && <div className={styles.toast} role="status"><span className={styles.toastIcon}><Check size={16} aria-hidden="true" /></span><span>{message}</span><button type="button" aria-label="Закрити сповіщення" onClick={() => setMessage('')}><X size={16} aria-hidden="true" /></button></div>}
     <div className={styles.columns}>
       <aside className={styles.sidebar} aria-label="Особистий кабінет">
         <div className={styles.identity}><strong>{profile.name || 'Мій акаунт'}</strong><span>{profile.email}</span></div>
-        <button aria-current={!orders ? 'page' : undefined} onClick={() => { setOrders(false); resetNotice(); }}>Мій профіль</button>
-        <button aria-current={orders ? 'page' : undefined} onClick={() => { setOrders(true); resetNotice(); }}>Мої замовлення</button>
+        <button aria-current={!orders ? 'page' : undefined} onClick={() => { setOrders(false); router.push('/profile'); resetNotice(); }}><span className={styles.navIcon}><Image src="/images/account/profile.svg" alt="" width={22} height={22} /></span>Мій профіль</button>
+        <button aria-current={orders ? 'page' : undefined} onClick={() => { setOrders(true); router.push('/profile?tab=orders'); resetNotice(); }}><Image src="/images/account/orders.svg" alt="" width={24} height={24} />Мої замовлення</button>
         {user.role === 'ADMIN' && <Link href="/admin">Адміністрування</Link>}
-        <button disabled={pending} onClick={async () => { resetNotice(); setPending(true); try { await useAuthStore.getState().logout(); router.replace('/login'); router.refresh(); } catch { setError('Не вдалося вийти. Спробуйте ще раз.'); } finally { setPending(false); } }}>Вийти з акаунта</button>
+        <button disabled={pending} onClick={async () => { resetNotice(); setPending(true); try { await useAuthStore.getState().logout(); router.replace('/login'); router.refresh(); } catch { setError('Не вдалося вийти. Спробуйте ще раз.'); } finally { setPending(false); } }}><Image src="/images/account/logout.svg" alt="" width={24} height={24} />Вийти з акаунта</button>
       </aside>
       <div className={styles.main}>
         {error && <p className={styles.error} role="alert">{error}</p>}
-        {orders ? <section className={styles.card}>{children}</section> : <>
+        {orders ? children : <>
           <section className={styles.card} aria-labelledby="personal-title">
             <div className={styles.row}><h2 id="personal-title">{editing ? 'Редагування профілю' : 'Особисті дані'}</h2>{!editing && <button className={styles.secondary} onClick={() => { setName(profile.name || ''); setPhone(profile.phone || ''); setEditing(true); resetNotice(); }}>Редагувати</button>}</div>
             <form onSubmit={event => save(event, false)} className={styles.form}>

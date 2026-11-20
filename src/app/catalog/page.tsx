@@ -26,7 +26,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const [total, categories, aggregated] = await Promise.all([
     MedicationModel.countDocuments(query.filter),
     CategoryModel.find().sort({ name: 1 }).lean(),
-    MedicationModel.aggregate([{ $match: { isDeleted: { $ne: true } } }, { $facet: facetPipeline }]),
+    MedicationModel.aggregate([{ $match: { isDeleted: { $ne: true }, inventoryOnly: { $ne: true } } }, { $facet: facetPipeline }]),
   ]);
   const page = Math.min(query.page, Math.max(1, Math.ceil(total / query.limit)));
   const medications = await MedicationModel.find(query.filter).sort(query.sort).skip((page - 1) * query.limit).limit(query.limit).lean();
