@@ -1,15 +1,20 @@
 import { connectDB, MedicationModel } from '@/lib/db';
 import { notFound } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
-import { ProductCard } from '@/components/ProductCard';
-import Image from 'next/image';
+import { cache } from 'react';
+import { ProductDetails } from '@/components/ProductDetails';
+import type { Medication } from '@/lib/types';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+const getMedication = cache(async (id: string): Promise<Medication | null> => {
+  if (!/^[a-f\d]{24}$/i.test(id)) return null;
+  await connectDB();
+  const med = await MedicationModel.findOne({ _id: id, isDeleted: { $ne: true } }).lean();
+  return med ? JSON.parse(JSON.stringify(med)) : null;
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  await connectDB();
-  const med = await MedicationModel.findById((await params).id).lean();
+  const med = await getMedication((await params).id);
   if (!med) return { title: 'Препарат не знайдено' };
   return {
     title: `${med.name} | iApteca`,
@@ -18,23 +23,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  await connectDB();
-  const med = await MedicationModel.findById((await params).id).lean();
-  if (!med || med.isDeleted) notFound();
-
-  return (
-    <div className="container mx-auto py-8 px-4 grid md:grid-cols-2 gap-8">
-      <div className="aspect-square bg-muted rounded-xl flex items-center justify-center relative overflow-hidden">
-        {med.image ? <Image src={med.image} alt={med.name} fill className="object-cover" /> : 'Немає фото'}
-      </div>
-      <div className="space-y-4">
-        <Badge variant={med.stock > 0 ? 'secondary' : 'destructive'}>{med.stock > 0 ? 'В наявності' : 'Немає'}</Badge>
-        <h1 className="text-3xl font-bold">{med.name}</h1>
-        <p className="text-muted-foreground">{med.manufacturer}</p>
-        <div className="text-2xl font-bold text-primary">{med.price} ₴</div>
-        <p className="border-t pt-4">{med.description}</p>
-        <ProductCard medication={JSON.parse(JSON.stringify(med))} />
-      </div>
-    </div>
-  );
+  const med = await getMedication((await params).id);
+  if (!med) notFound();
+  let alternatives: Medication[] = [];
+  if (med.activeIngredient?.trim()) {
+    const ingredient = med.activeIngredient.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const matches = await MedicationModel.find({ _id: { $ne: med._id }, isDeleted: { $ne: true }, activeIngredient: { $regex: `^${ingredient}$`, $options: 'i' }, ...(med.stock <= 0 ? { stock: { $gt: 0 } } : {}) }).sort({ price: 1, _id: 1 }).limit(3).lean();
+    alternatives = JSON.parse(JSON.stringify(matches));
+  }
+  return <ProductDetails medication={med} alternatives={alternatives} />;
 }

@@ -24,7 +24,7 @@ export function Footer() {
           <nav className={styles.column} aria-label="Інформація покупцям">
             <h2>Покупцям</h2>
             <Link href="/#delivery-info">Доставка та оплата</Link>
-            <Link href="/checkout">Електронний рецепт</Link>
+            <Link href="/prescription">Електронний рецепт</Link>
           </nav>
 
           <nav className={styles.column} id="support" aria-label="Підтримка">

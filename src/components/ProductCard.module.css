@@ -148,12 +148,10 @@
 
 .favoriteActive {
   background: #ebf2ff;
-  border-color: #0056d2;
+  border-color: #80b4ff;
 }
 
-.favoriteActive img {
-  filter: brightness(0) saturate(100%) invert(24%) sepia(99%) saturate(3200%) hue-rotate(209deg);
-}
+.favoriteActive img { filter: none; }
 
 .srOnly {
   position: absolute;

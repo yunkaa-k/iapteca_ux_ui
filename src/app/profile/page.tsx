@@ -5,16 +5,17 @@ import { Badge } from '@/components/ui/badge';
 import { Order } from '@/lib/types';
 import { statusMap } from '@/lib/utils';
 import { Package } from 'lucide-react';
+import { ProfileAccount } from '@/components/ProfileAccount';
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
   const user = await getAuthUser();
   if (!user) redirect('/login');
   await connectDB();
   const orders = (await OrderModel.find({ user: user._id }).sort({ createdAt: -1 }).lean()) as unknown as Order[];
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
-      <h1 className="text-2xl font-bold">Профіль: {user.name || user.email || user.phone}</h1>
+    <ProfileAccount user={user} initialOrders={tab === 'orders'}>
       <div className="space-y-4">
         <h2 className="text-xl font-semibold flex items-center gap-2"><Package className="w-5 h-5" /> Мої замовлення</h2>
         {orders.length === 0 ? <p className="opacity-50">У вас ще немає замовлень</p> : (
@@ -34,6 +35,6 @@ export default async function ProfilePage() {
           </div>
         )}
       </div>
-    </div>
+    </ProfileAccount>
   );
 }

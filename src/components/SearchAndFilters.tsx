@@ -4,6 +4,7 @@ import { useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Slider } from 'radix-ui';
+import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -105,7 +106,7 @@ export function SearchAndFilters({ facets, categories, total, children }: { face
           <fieldset className={styles.group}><legend>Наявність</legend>{checkRow('inStock', 'true', 'Лише в наявності')}</fieldset>
           <div className={styles.group}><h3>Ціна, грн</h3><PriceFilter key={`${min}:${max}`} min={Math.max(0, min)} max={max} bound={facets.maxPrice} disabled={pending} apply={(low, high) => navigate({ minPrice: low > 0 ? String(low) : null, maxPrice: high < facets.maxPrice || params.has('maxPrice') ? String(high) : null })} /></div>
           <details className={styles.advanced}>
-            <summary>Додаткові фільтри</summary>
+            <summary><SlidersHorizontal size={16} aria-hidden="true" /><span>Додаткові фільтри</span><ChevronDown className={styles.advancedChevron} size={16} aria-hidden="true" /></summary>
             <div className={styles.advancedContent}>
               <fieldset className={styles.group}><legend>Дозування</legend>{(facets.dosage.length ? facets.dosage : ['200 мг', '400 мг', '500 мг', '5 мг', '60 мг']).map((dose) => checkRow('dosage', dose, dose))}</fieldset>
               <fieldset className={styles.group}><legend>Кількість в упаковці</legend>{(facets.packSize.length ? facets.packSize : ['12', '20', '24', '10', '30', '100']).map((pack) => checkRow('packSize', pack, `№${pack}`))}</fieldset>

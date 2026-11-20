@@ -136,6 +136,10 @@
 }
 
 @layer base {
+  /* Edge provides a second reveal control; visibility is handled by our accessible button. */
+  input[type="password"]::-ms-reveal {
+    display: none;
+  }
   * {
     @apply border-border outline-ring/50;
   }

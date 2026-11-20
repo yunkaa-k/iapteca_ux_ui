@@ -57,7 +57,7 @@
   text-decoration: none;
 }
 
-.navigation a:hover {
+.navigation a:hover, .navigation a[aria-current="page"] {
   color: var(--iapteca-primary);
 }
 

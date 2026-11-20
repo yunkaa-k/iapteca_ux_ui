@@ -1,0 +1,40 @@
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ProfileAccount } from '@/components/ProfileAccount';
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }) }));
+const user = { _id: 'owner', name: 'Олена', email: 'test@example.test', role: 'CUSTOMER' as const, isBanned: false };
+const view = () => render(<ProfileAccount user={user}><p>Existing orders</p></ProfileAccount>);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+describe('account design feedback', () => {
+  it('shows a dismissible floating save notification', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: { ...user, name: 'Олена Коваль' } }) }));
+    view(); fireEvent.click(screen.getByRole('button', { name: 'Редагувати' }));
+    fireEvent.change(screen.getByLabelText('Ім’я та прізвище'), { target: { value: 'Олена Коваль' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Зберегти зміни' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Зміни збережено');
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити сповіщення' }));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+  it('shows the server password error below its field and clears it when cancelling', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ fields: { currentPassword: 'Поточний пароль неправильний. Спробуйте ще раз.' } }) }));
+    view(); fireEvent.click(screen.getByRole('button', { name: 'Змінити пароль' }));
+    const current = screen.getByLabelText(/^Поточний пароль/, { selector: 'input' });
+    fireEvent.change(current, { target: { value: 'Incorrect123' } });
+    fireEvent.change(screen.getByLabelText(/^Новий пароль/, { selector: 'input' }), { target: { value: 'NewPassword123' } });
+    fireEvent.change(screen.getByLabelText(/^Підтвердіть новий пароль/, { selector: 'input' }), { target: { value: 'NewPassword123' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Зберегти пароль' }));
+    await waitFor(() => expect(current).toHaveAttribute('aria-invalid', 'true'));
+    expect(screen.getByRole('alert').id).toBe(current.getAttribute('aria-describedby'));
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+  it('validates short and mismatched new passwords without sending a request', () => {
+    const fetchMock = vi.fn(); vi.stubGlobal('fetch', fetchMock);
+    view(); fireEvent.click(screen.getByRole('button', { name: 'Змінити пароль' }));
+    fireEvent.change(screen.getByLabelText(/^Поточний пароль/, { selector: 'input' }), { target: { value: 'Current123' } });
+    fireEvent.change(screen.getByLabelText(/^Новий пароль/, { selector: 'input' }), { target: { value: 'short' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Зберегти пароль' }));
+    expect(screen.getAllByRole('alert')).toHaveLength(2);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

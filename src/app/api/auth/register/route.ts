@@ -4,11 +4,8 @@ import bcrypt from 'bcrypt';
 import { setAuthCookie } from '@/lib/auth';
 import { normalizeEmail, validateEmailAuth } from '@/lib/authValidation';
 import { logger } from '@/lib/logger';
-import { metrics } from '@/lib/metrics';
 
 export async function POST(req: Request) {
-  const started = Date.now();
-  metrics.incrementCounter('http_requests_total', { method: 'POST', path: '/api/auth/register' });
   try {
     const origin = req.headers.get('origin');
     if (origin && origin !== new URL(req.url).origin) return NextResponse.json({ error: 'Недозволений запит.' }, { status: 403 });
@@ -23,14 +20,11 @@ export async function POST(req: Request) {
     const user = await UserModel.create({ email, password: await bcrypt.hash(password, 10), name, privacyAcceptedAt: new Date() });
     await setAuthCookie(user._id.toString());
     logger.info('user.register', { user_id: user._id.toString() });
-    metrics.incrementGauge('active_user_sessions');
     return NextResponse.json({ user: { _id: user._id.toString(), phone: user.phone, email: user.email, role: user.role, name: user.name, isBanned: false } }, { status: 201 });
   } catch (error) {
     if (error && typeof error === 'object' && 'code' in error && error.code === 11000) return NextResponse.json({ error: 'Акаунт із такими даними вже існує. Спробуйте увійти.' }, { status: 409 });
     if (error instanceof SyntaxError || error instanceof TypeError) return NextResponse.json({ error: 'Некоректний запит.' }, { status: 400 });
     logger.error('user.register_error', { error_name: error instanceof Error ? error.name : 'UnknownError' });
     return NextResponse.json({ error: 'Не вдалося створити акаунт. Спробуйте пізніше.' }, { status: 500 });
-  } finally {
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - started, { path: '/api/auth/register' });
   }
 }

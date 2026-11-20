@@ -3,15 +3,11 @@ import { connectDB, OrderModel, MedicationModel } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import mongoose from 'mongoose';
 import { logger } from '@/lib/logger';
-import { metrics } from '@/lib/metrics';
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const startTime = Date.now();
-  metrics.incrementCounter('http_requests_total', { method: 'PATCH', path: '/api/orders/[id]' });
 
   const user = await getAuthUser();
   if (user?.role !== 'ADMIN') {
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders/[id]' });
     return NextResponse.json({ error: 'Auth' }, { status: 403 });
   }
 
@@ -46,13 +42,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     await session.commitTransaction();
     
     logger.info('order.status_changed', { order_id: orderId, status, admin_id: user._id.toString() });
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders/[id]' });
     
     return NextResponse.json(updatedOrder);
   } catch (error: unknown) {
     await session.abortTransaction();
     const message = error instanceof Error ? error.message : 'Failed';
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders/[id]' });
     return NextResponse.json({ error: message }, { status: 400 });
   } finally {
     session.endSession();

@@ -36,8 +36,13 @@
 .range[data-disabled] { opacity: .5; cursor: default; }
 .error { color: var(--iapteca-error-ink); font-size: 13px; line-height: 18px; margin: 4px 0 0; }
 .advanced { border: 1px solid var(--iapteca-border); border-radius: 10px; background: #fff; }
-.advanced summary { min-height: 44px; padding: 12px; color: var(--iapteca-primary); font-size: 14px; line-height: 20px; font-weight: 600; cursor: pointer; }
-.advancedContent { display: flex; flex-direction: column; gap: 16px; padding: 12px; border-top: 1px solid var(--iapteca-border); }
+.advanced summary { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px; color: var(--iapteca-text); font-size: 14px; line-height: 20px; font-weight: 400; list-style: none; cursor: pointer; }
+.advanced summary::-webkit-details-marker { display: none; }
+.advanced summary::marker { content: ''; }
+.advanced summary > svg { color: var(--iapteca-muted); flex-shrink: 0; }
+.advancedChevron { margin-left: auto; }
+.advancedContent { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+.advancedContent .checkRow { gap: 12px; padding: 4px 8px; }
 .advancedContent legend { line-height: 18px; }
 .hint { margin: 0; color: var(--iapteca-muted); font-size: 12px; line-height: 18px; }
 .main { min-width: 0; display: flex; flex-direction: column; gap: 24px; }

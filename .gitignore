@@ -50,8 +50,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Kubernetes Secret manifests - keep local only
-k8s/*secret*.yaml
-
-# Kubernetes Secret manifests - local only
+# Local secret manifests (never commit credentials)
 *secret*.yaml

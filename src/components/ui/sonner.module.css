@@ -1,0 +1,10 @@
+.toast { position: relative; display: flex; align-items: center; gap: 12px; width: 440px; min-height: 72px; padding: 16px 52px 16px 16px; border: 1px solid #b9e9e7; border-radius: 14px; background: #fff; box-shadow: 0 12px 24px rgb(16 37 65 / 14%); font-family: var(--font-iapteca), sans-serif; color: var(--iapteca-success-ink); }
+.title { font-size: 16px; font-weight: 600; line-height: 22px; }
+.description { margin-top: 4px; font-size: 13px; line-height: 20px; color: var(--iapteca-text-secondary); overflow-wrap: anywhere; }
+.description span, .description a { display: block; }
+.description a { color: var(--iapteca-primary); text-decoration: underline; }
+.icon { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; margin: 0; background: var(--iapteca-success-surface); border-radius: 50%; }
+.close { position: absolute; top: 12px; right: 12px; left: auto; width: 24px; height: 24px; display: grid; place-items: center; background: transparent; border: 0; border-radius: 4px; color: var(--iapteca-muted); transform: none; cursor: pointer; }
+.toast[data-type=error] { border-color: #f8c5c1; color: var(--iapteca-error-ink); }
+.toast[data-type=error] .icon { background: var(--iapteca-error-surface); }
+.toast button:focus-visible, .toast a:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 2px; }

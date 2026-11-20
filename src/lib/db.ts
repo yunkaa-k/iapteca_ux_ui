@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import { logger } from './logger';
-import { metrics } from './metrics';
 
 type MongooseCache = {
   connection: typeof mongoose | null;
@@ -20,7 +19,6 @@ const cache = globalThis.iaptecaMongooseCache ?? (globalThis.iaptecaMongooseCach
 export const connectDB = async () => {
   const uri = process.env.MONGODB_URI?.trim();
   if (!uri) {
-    metrics.setGauge('db_connection_status', 0);
     throw new Error('MONGODB_URI is not configured. Create .env.local from the local setup instructions.');
   }
 
@@ -31,7 +29,6 @@ export const connectDB = async () => {
       maxPoolSize: 100,
     }).then(() => mongoose).catch((error: unknown) => {
       cache.promise = null;
-      metrics.setGauge('db_connection_status', 0);
 
       const safeError = error instanceof Error ? error : undefined;
       const errorCode = safeError && 'code' in safeError ? safeError.code : undefined;
@@ -44,14 +41,8 @@ export const connectDB = async () => {
     });
   }
 
-  try {
-    cache.connection = await cache.promise;
-    metrics.setGauge('db_connection_status', 1);
-    return cache.connection;
-  } catch (error: unknown) {
-    metrics.setGauge('db_connection_status', 0);
-    throw error;
-  }
+  cache.connection = await cache.promise;
+  return cache.connection;
 };
 
 export * from './models';

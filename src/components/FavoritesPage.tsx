@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ProductCard } from './ProductCard';
-import { CartDrawer } from './CartDrawer';
 import { useFavoritesStore } from '@/lib/store/favoritesStore';
 import { useCartStore } from '@/lib/store/cartStore';
 import { useHydrated } from '@/lib/useHydrated';
@@ -83,7 +82,7 @@ export function FavoritesPage() {
           <div className={styles.grid} aria-label="Збережені товари">
             {items.map((item) => <ProductCard key={item.medication._id} {...item} variant="featured" />)}
           </div>
-          <div className={styles.cartLink}><CartDrawer><button className={styles.secondaryButton} type="button">Переглянути кошик</button></CartDrawer></div>
+          <div className={styles.cartLink}><Link className={styles.secondaryButton} href="/cart">Переглянути кошик</Link></div>
         </>
       )}
     </div>
