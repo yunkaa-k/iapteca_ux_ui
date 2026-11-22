@@ -41,3 +41,11 @@
 .secondary { width: 190px; color: var(--iapteca-primary); background: var(--secondary); border: 1px solid var(--iapteca-border); }
 .copyState { font-size: 13px; color: var(--iapteca-muted); margin: 12px 0 0; }
 .receipt a:focus-visible, .receipt button:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 3px; }
+.listControls { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--iapteca-border); color: var(--iapteca-muted); font-size: 14px; }
+.listControls button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding-inline: 8px; color: var(--iapteca-primary); font-size: 14px; font-weight: 600; line-height: 20px; cursor: pointer; }
+.paid .image { width: 104px; height: 80px; flex-basis: 104px; }
+.paid .product strong { font-size: 16px; line-height: 1.4; font-weight: 500; }
+.paid .table td:nth-child(2) { font-size: 14px; color: var(--iapteca-muted); }
+.paid .table th:nth-child(2), .paid .table td:nth-child(2) { width: 100px; }
+.paid .table th:nth-child(3), .paid .table td:nth-child(3) { width: 120px; }
+.paid .actions a { width: 235px; }

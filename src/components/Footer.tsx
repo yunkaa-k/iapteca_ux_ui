@@ -18,7 +18,6 @@ export function Footer() {
           <nav className={styles.column} aria-label="Розділи сайту">
             <h2>Розділи</h2>
             <Link href="/catalog">Каталог препаратів</Link>
-            <Link href="/catalog">Аналоги препаратів</Link>
           </nav>
 
           <nav className={styles.column} aria-label="Інформація покупцям">

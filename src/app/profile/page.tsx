@@ -15,7 +15,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   const products = (ids.length ? await MedicationModel.find({ _id: { $in: ids } }).lean() : []) as unknown as Medication[];
   const byId = new Map(products.map(product => [product._id.toString(), product]));
   const orders: AccountOrder[] = records.map(order => ({
-    _id: order._id.toString(), user: user._id, total: order.total, status: order.status,
+    _id: order._id.toString(), user: user._id, total: order.total, status: order.status, checkout: order.checkout,
     createdAt: new Date(order.createdAt).toISOString(),
     items: order.items.map(item => {
       const medication = byId.get(item.medication.toString());

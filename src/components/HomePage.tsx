@@ -28,7 +28,7 @@ const benefits = [
   { title: 'Швидка доставка', detail: 'по всій Україні', image: '/images/home/service-delivery.svg' },
   { title: 'Сертифіковані препарати', detail: 'Перевірена якість', image: '/images/home/service-certified.svg' },
   { title: 'Вигідні ціни', detail: 'та аналоги', image: '/images/home/service-discount.svg' },
-  { title: 'Професійна консультація', detail: 'Допоможемо з вибором', image: '/images/home/service-support.svg' },
+  { title: 'Зручне отримання', detail: 'Самовивіз або доставка', image: '/images/home/service-pickup.svg' },
 ];
 
 function SectionHeading({ title, href, linkText, id }: { title: string; href: string; linkText: string; id: string }) {
@@ -150,7 +150,7 @@ export function HomePage({ featuredMedications, kits = [] }: { featuredMedicatio
             {benefits.map((benefit) => (
               <div className={styles.benefit} key={benefit.title}>
                 <span className={styles.benefitIcon}>
-                  <Image src={benefit.image} alt="" width={28} height={28} aria-hidden="true" />
+                  <Image src={benefit.image} alt="" width={benefit.image.endsWith('service-pickup.svg') ? 24 : 28} height={benefit.image.endsWith('service-pickup.svg') ? 24 : 28} aria-hidden="true" />
                 </span>
                 <span className={styles.benefitText}>
                   <strong>{benefit.title}</strong>

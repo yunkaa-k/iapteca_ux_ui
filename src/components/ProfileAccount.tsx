@@ -8,12 +8,13 @@ import { useAuthStore } from '@/lib/store/authStore';
 import type { User } from '@/lib/types';
 import styles from './ProfileAccount.module.css';
 import { LogoutDialog } from './LogoutDialog';
+import { profileNames } from '@/lib/profile';
 
 export function ProfileAccount({ user, children, initialOrders = false, requestDetails = false }: { user: User; children: ReactNode; initialOrders?: boolean; requestDetails?: boolean }) {
   const router = useRouter();
   const [profile, setProfile] = useState(user);
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(user.name || '');
+  const [names, setNames] = useState(() => profileNames(user));
   const [phone, setPhone] = useState(user.phone || '');
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwords, setPasswords] = useState(['', '', '']);
@@ -33,7 +34,7 @@ export function ProfileAccount({ user, children, initialOrders = false, requestD
     }
     setPending(true);
     try {
-      const response = await fetch(password ? '/api/profile/password' : '/api/profile', { method: password ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(password ? { currentPassword: passwords[0], newPassword: passwords[1], confirmation: passwords[2] } : { name, phone }) });
+      const response = await fetch(password ? '/api/profile/password' : '/api/profile', { method: password ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(password ? { currentPassword: passwords[0], newPassword: passwords[1], confirmation: passwords[2] } : { ...names, phone }) });
       const data = await response.json();
       if (!response.ok) { if (password && data.fields) setPasswordErrors([data.fields.currentPassword || '', data.fields.newPassword || '', data.fields.confirmation || '']); else setError(data.error || 'Не вдалося зберегти зміни.'); return; }
       if (password) { setPasswords(['', '', '']); setVisible([false, false, false]); setChangingPassword(false); setMessage('Пароль змінено'); }
@@ -45,7 +46,7 @@ export function ProfileAccount({ user, children, initialOrders = false, requestD
   return <div className={styles.page}>
     <nav className={styles.breadcrumbs} aria-label="Навігаційний шлях"><Link href="/">Головна</Link> / Особистий кабінет{orders && ' / Мої замовлення'}{orders && requestDetails && ' / Заявка'}</nav>
     <h1>{orders ? requestDetails ? 'Деталі заявки' : 'Мої замовлення' : 'Особистий кабінет'}</h1>
-    <p className={styles.subtitle}>{orders ? requestDetails ? 'Товари, прикріплений рецепт і результат його перевірки.' : 'Заявки на перевірку рецепта, оформлені замовлення та статуси їх отримання.' : 'Керуйте особистими даними та переглядайте свої замовлення.'}</p>
+    <p className={styles.subtitle}>{orders ? requestDetails ? 'Товари, прикріплений рецепт і результат його перевірки.' : 'Заявки на перевірку рецепта, оформлені замовлення та статуси їх отримання.' : editing ? 'Оновіть контактні дані для наступних замовлень.' : 'Керуйте особистими даними та переглядайте свої замовлення.'}</p>
     {message && <div className={styles.toast} role="status"><span className={styles.toastIcon}><Check size={16} aria-hidden="true" /></span><span>{message}</span><button type="button" aria-label="Закрити сповіщення" onClick={() => setMessage('')}><X size={16} aria-hidden="true" /></button></div>}
     <div className={styles.columns}>
       <aside className={styles.sidebar} aria-label="Особистий кабінет">
@@ -59,11 +60,14 @@ export function ProfileAccount({ user, children, initialOrders = false, requestD
         {error && <p className={styles.error} role="alert">{error}</p>}
         {orders ? children : <>
           <section className={styles.card} aria-labelledby="personal-title">
-            <div className={styles.row}><h2 id="personal-title">{editing ? 'Редагування профілю' : 'Особисті дані'}</h2>{!editing && <button className={styles.secondary} onClick={() => { setName(profile.name || ''); setPhone(profile.phone || ''); setEditing(true); resetNotice(); }}>Редагувати</button>}</div>
+            <div className={styles.row}><h2 id="personal-title">{editing ? 'Редагування профілю' : 'Особисті дані'}</h2>{!editing && <button className={styles.secondary} onClick={() => { setNames(profileNames(profile)); setPhone(profile.phone || ''); setEditing(true); resetNotice(); }}>Редагувати</button>}</div>
             <form onSubmit={event => save(event, false)} className={styles.form}>
-              <div className={styles.fields}><label>Ім’я та прізвище{editing ? <input value={name} onChange={e => setName(e.target.value)} required maxLength={100} autoComplete="name" disabled={pending} /> : <strong>{profile.name || 'Не вказано'}</strong>}</label><label>Номер телефону{editing ? <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+380 XX XXX XX XX" autoComplete="tel" disabled={pending} /> : <strong>{profile.phone || 'Не вказано'}</strong>}</label></div>
-              <div className={styles.email}><span>Електронна пошта</span><strong>{profile.email}</strong><p>Ця адреса використовується для входу.</p></div>
-              {editing && <div className={styles.row}><button className={styles.primary} disabled={pending}>Зберегти зміни</button><button type="button" className={styles.secondary} disabled={pending} onClick={() => { setEditing(false); resetNotice(); }}>Скасувати</button></div>}
+              <div className={`${styles.fields} ${editing ? styles.editingFields : ''}`}>
+                {([{ key: 'firstName', label: 'Ім’я', complete: 'given-name' }, { key: 'lastName', label: 'Прізвище', complete: 'family-name' }] as const).map(field => <label key={field.key}>{field.label}{editing ? <input value={names[field.key]} onChange={e => setNames(value => ({ ...value, [field.key]: e.target.value }))} required maxLength={100} autoComplete={field.complete} disabled={pending} /> : <strong>{profileNames(profile)[field.key] || 'Не вказано'}</strong>}</label>)}
+                <label>Електронна пошта{editing ? <span className={styles.lockedEmail}><input type="email" value={profile.email || ''} readOnly aria-readonly="true" autoComplete="email" /><Image src="/images/account/email-lock.svg" alt="" width={24} height={24} aria-hidden="true" /></span> : <strong>{profile.email || 'Не вказано'}</strong>}</label>
+                <label>Номер телефону{editing ? <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+380 XX XXX XX XX" autoComplete="tel" disabled={pending} /> : <strong>{profile.phone || 'Не вказано'}</strong>}</label>
+              </div>
+              {editing && <div className={styles.passwordActions}><button className={styles.primary} disabled={pending}>Зберегти зміни</button><button type="button" className={styles.secondary} disabled={pending} onClick={() => { setEditing(false); resetNotice(); }}>Скасувати</button></div>}
             </form>
           </section>
           <section className={`${styles.card} ${changingPassword ? styles.securityEditing : ''}`} aria-labelledby="security-title"><h2 id="security-title">Пароль та безпека</h2>

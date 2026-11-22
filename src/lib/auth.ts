@@ -15,7 +15,7 @@ export async function getAuthUser() {
   if (!session) return null;
   const user = await UserModel.findById(session.user).lean();
   if (!user || user.isBanned) return null;
-  return { _id: user._id.toString(), phone: user.phone, email: user.email, role: user.role, name: user.name, isBanned: false };
+  return { _id: user._id.toString(), phone: user.phone, email: user.email, role: user.role, name: user.name, firstName: user.firstName, lastName: user.lastName, isBanned: false };
 }
 
 export async function setAuthCookie(userId: string) {

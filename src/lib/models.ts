@@ -6,6 +6,8 @@ const userSchema = new Schema<User>({
   email: { type: String, trim: true, lowercase: true },
   password: { type: String, required: true },
   name: { type: String },
+  firstName: { type: String },
+  lastName: { type: String },
   role: { type: String, enum: ['CUSTOMER', 'ADMIN'], default: 'CUSTOMER' },
   isBanned: { type: Boolean, default: false },
   privacyAcceptedAt: { type: Date },
@@ -67,6 +69,7 @@ export const BundleModel = models.Bundle || model<Bundle>('Bundle', bundleSchema
 
 const orderSchema = new Schema<Order>({
   user: { type: String },
+  guestPaymentTokenHash: { type: String, select: false },
   items: { type: [orderItemSchema], required: true },
   total: { type: Number, required: true, min: 0 },
   subtotal: { type: Number, min: 0 },
@@ -74,7 +77,9 @@ const orderSchema = new Schema<Order>({
     type: new Schema({
       contact: { name: String, phone: String, email: String },
       delivery: { method: { type: String, enum: ['pickup', 'courier'] }, pharmacyId: String, pharmacyName: String, city: String, address: String, fee: { type: Number, min: 0 } },
-      payment: { type: String, enum: ['on-receipt', 'online-after-confirmation'] },
+      payment: { type: String, enum: ['on-receipt', 'online-after-confirmation', 'online'] },
+      paymentMode: { type: String, enum: ['demo'] },
+      demoPaymentStatus: { type: String, enum: ['paid', 'failed'] },
     }, { _id: false }),
     required: false,
   },

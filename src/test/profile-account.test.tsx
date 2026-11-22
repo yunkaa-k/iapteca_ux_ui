@@ -18,11 +18,29 @@ describe('account design feedback', () => {
   it('shows a dismissible floating save notification', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: { ...user, name: 'Олена Коваль' } }) }));
     view(); fireEvent.click(screen.getByRole('button', { name: 'Редагувати' }));
-    fireEvent.change(screen.getByLabelText('Ім’я та прізвище'), { target: { value: 'Олена Коваль' } });
+    fireEvent.change(screen.getByLabelText('Ім’я'), { target: { value: 'Олена' } });
+    fireEvent.change(screen.getByLabelText('Прізвище'), { target: { value: 'Коваль' } });
     fireEvent.click(screen.getByRole('button', { name: 'Зберегти зміни' }));
     expect(await screen.findByRole('status')).toHaveTextContent('Зміни збережено');
     fireEvent.click(screen.getByRole('button', { name: 'Закрити сповіщення' }));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+  it('submits separate names, keeps email read-only and restores saved values after cancel', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: { ...user, name: 'Марія Анна Коваль', firstName: 'Марія Анна', lastName: 'Коваль' } }) });
+    vi.stubGlobal('fetch', fetchMock);
+    view(); fireEvent.click(screen.getByRole('button', { name: 'Редагувати' }));
+    expect(screen.getByLabelText('Електронна пошта')).toHaveAttribute('readonly');
+    fireEvent.change(screen.getByLabelText('Ім’я'), { target: { value: 'Марія Анна' } });
+    fireEvent.change(screen.getByLabelText('Прізвище'), { target: { value: 'Коваль' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Зберегти зміни' }));
+    await screen.findByRole('status');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ firstName: 'Марія Анна', lastName: 'Коваль', phone: '' });
+    fireEvent.click(screen.getByRole('button', { name: 'Редагувати' }));
+    expect(screen.getByLabelText('Ім’я')).toHaveValue('Марія Анна');
+    fireEvent.change(screen.getByLabelText('Ім’я'), { target: { value: 'Інше' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Редагувати' }));
+    expect(screen.getByLabelText('Ім’я')).toHaveValue('Марія Анна');
   });
   it('shows the server password error below its field and clears it when cancelling', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ fields: { currentPassword: 'Поточний пароль неправильний. Спробуйте ще раз.' } }) }));

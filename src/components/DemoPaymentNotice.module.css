@@ -1,0 +1,15 @@
+.notice { display: flex; align-items: center; gap: 24px; width: 100%; padding: 24px; border-radius: 12px; background: var(--iapteca-error-surface); color: var(--iapteca-error-ink); }
+.notice > div { flex: 1; min-width: 0; }
+.notice strong { font-size: 14px; font-weight: 500; line-height: 20px; }
+.notice p { margin: 8px 0 0; color: var(--iapteca-muted); font-size: 14px; line-height: 20px; }
+.notice p[role=alert] { color: var(--iapteca-error-ink); }
+.notice button { flex: 0 0 240px; min-height: 48px; padding: 12px 16px; border-radius: 12px; color: white; background: var(--iapteca-primary); font-size: 16px; font-weight: 600; cursor: pointer; }
+.notice button:disabled { opacity: .6; cursor: wait; }
+.notice button:focus-visible { outline: 3px solid var(--iapteca-primary); outline-offset: 3px; }
+.caption { margin: 12px 0 0; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; }
+.retryForm { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+.actions { display: flex; gap: 16px; }
+.actions button { min-height: 48px; padding: 12px 24px; border-radius: 12px; background: var(--iapteca-primary); color: white; font-size: 16px; font-weight: 600; cursor: pointer; }
+.actions .cancel { border: 1px solid var(--iapteca-border); background: var(--secondary); color: var(--iapteca-primary); }
+.actions button:disabled { opacity: .6; cursor: wait; }
+.actions button:focus-visible { outline: 3px solid var(--iapteca-primary); outline-offset: 3px; }

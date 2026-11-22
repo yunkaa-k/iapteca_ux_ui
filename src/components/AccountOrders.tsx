@@ -12,6 +12,7 @@ import { requestStatus, usePrescriptionRequestStore, type PrescriptionRequest } 
 import type { CartItem } from '@/lib/store/cartStore';
 import type { Order } from '@/lib/types';
 import styles from './AccountOrders.module.css';
+import { DemoPaymentNotice } from './DemoPaymentNotice';
 
 export type AccountOrder = Omit<Order, 'items' | 'createdAt'> & { items: CartItem[]; createdAt: string };
 const date = (time: number | string) => new Intl.DateTimeFormat('uk-UA', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Kyiv' }).format(new Date(time));
@@ -75,7 +76,7 @@ export function AccountOrders({ ownerId, orders, requestId }: { ownerId: string;
     {orders.length === 0 ? <section className={styles.panel}><h2>Замовлень ще немає</h2><p>Оформлені замовлення з’являться тут.</p><Link className={styles.secondary} href="/catalog">Перейти до каталогу</Link></section> : orders.map(order => <section className={styles.orderCard} key={order._id}>
       <div className={styles.heading}><div><h2>Замовлення № {order._id.slice(-6).toUpperCase()}</h2><p>{date(order.createdAt)}</p></div><span className={`${styles.badge} ${order.status === 'CANCELLED' ? styles.cancelled : order.status === 'COMPLETED' ? styles.approved : styles.reviewing}`}>{({ PENDING: 'В обробці', CONFIRMED: 'Підтверджено', COMPLETED: 'Отримано', CANCELLED: 'Скасовано' })[order.status]}</span></div>
       <div className={styles.cardSummary}><Thumbnails items={order.items} /><span>{order.items.length} товарів</span><strong>{money(order.total)}</strong></div>
-      <details><summary className={styles.textLink}>Переглянути замовлення</summary><ProductRows items={order.items} /></details>
+      <details><summary className={styles.textLink}>Переглянути замовлення</summary><ProductRows items={order.items} />{order.checkout && order.status !== 'CANCELLED' && <DemoPaymentNotice orderId={order._id} checkout={order.checkout} onPaid={() => router.refresh()} />}</details>
     </section>)}
   </>;
 }

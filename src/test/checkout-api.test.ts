@@ -43,4 +43,16 @@ describe('checkout orders API', () => {
     expect((await POST(request({ checkout: { ...checkout, phone: '123' } }))).status).toBe(400);
     expect(mocks.update).not.toHaveBeenCalled();
   });
+  it('stores a private guest capability hash but returns only the token and public payment metadata', async () => {
+    const response = await POST(request({ checkout: { ...checkout, payment: 'online', demoPaymentOutcome: 'failure' } }));
+    const data = await response.json();
+    expect(response.status).toBe(200);
+    expect(data.guestPaymentToken).toMatch(/^[a-f0-9]{64}$/);
+    expect(data.guestPaymentTokenHash).toBeUndefined();
+    const saved = mocks.create.mock.calls[0][0][0];
+    expect(saved.guestPaymentTokenHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(saved.guestPaymentTokenHash).not.toBe(data.guestPaymentToken);
+    expect(saved.checkout).toMatchObject({ paymentMode: 'demo', demoPaymentStatus: 'failed' });
+    expect(data.checkout).toMatchObject({ paymentMode: 'demo', demoPaymentStatus: 'failed' });
+  });
 });

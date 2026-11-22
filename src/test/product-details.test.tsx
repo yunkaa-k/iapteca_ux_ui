@@ -16,6 +16,7 @@ describe('product details', () => {
     expect(productFacts(med)).toContainEqual(['Діючі речовини', 'Не вказано']);
     expect(unitPrice(med)).toBe('Не вказано');
     expect(unitPrice({ ...med, packSize: 20 })).toBe('5 грн / од.');
+    expect(unitPrice({ ...med, packSize: 20, dosageForm: 'tablets' })).toBe('5 грн / табл.');
   });
   it('caps selected quantity and cart additions at available stock', () => {
     render(<ProductDetails medication={med} alternatives={[]} />);
@@ -46,5 +47,14 @@ describe('product details', () => {
     expect(useFavoritesStore.getState().items[0].medication._id).toBe(med._id);
     fireEvent.click(screen.getByRole('button', { name: 'Вилучити з обраного' }));
     expect(useFavoritesStore.getState().items).toHaveLength(0);
+  });
+  it('closes a comparison, resets selection and returns focus to its entry point', () => {
+    render(<ProductDetails medication={med} alternatives={[{ ...med, _id: 'alternative' }]} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Порівняти всі' }));
+    expect(screen.getByRole('table', { name: 'Порівняння препаратів' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити порівняння' }));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Порівняти всі' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Порівняти' })).toHaveAttribute('aria-pressed', 'false');
   });
 });

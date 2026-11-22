@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { logger } from '@/lib/logger';
 import type { OrderItem } from '@/lib/types';
 import { parseCheckout } from '@/lib/checkout';
+import { createHash, randomBytes } from 'node:crypto';
 
 export async function GET(req: Request) {
 
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
     quantities.set(key, quantity);
   }
   await connectDB();
+  const guestPaymentToken = !user && parsed.details?.payment === 'online' ? randomBytes(32).toString('hex') : undefined;
   for (let attempt = 0; attempt < 5; attempt++) {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -80,10 +82,12 @@ export async function POST(req: Request) {
       }
       subtotal /= 100;
       const total = subtotal + (parsed.details?.delivery.fee || 0);
-      const [order] = await OrderModel.create([{ ...(user ? { user: user._id } : {}), items, subtotal, total, ...(parsed.details ? { checkout: parsed.details } : {}), status: 'PENDING' }], { session });
+      const [order] = await OrderModel.create([{ ...(user ? { user: user._id } : {}), ...(guestPaymentToken ? { guestPaymentTokenHash: createHash('sha256').update(guestPaymentToken).digest('hex') } : {}), items, subtotal, total, ...(parsed.details ? { checkout: parsed.details } : {}), status: 'PENDING' }], { session });
       await session.commitTransaction();
       logger.info('order.created', { order_id: order._id.toString(), total });
-      return NextResponse.json(order);
+      const publicOrder = typeof order.toObject === 'function' ? order.toObject() : { ...order };
+      delete publicOrder.guestPaymentTokenHash;
+      return NextResponse.json({ ...publicOrder, ...(guestPaymentToken ? { guestPaymentToken } : {}) });
     } catch (error: unknown) {
       await session.abortTransaction();
       const err = error as Error & { code?: number; hasErrorLabel?: (label: string) => boolean };

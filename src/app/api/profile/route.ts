@@ -9,10 +9,15 @@ export async function PUT(req: Request) {
     if (!user) return NextResponse.json({ error: 'Auth' }, { status: 401 });
     await connectDB();
     const body = await req.json();
-    const name = typeof body?.name === 'string' ? body.name.trim() : '';
+    const structured = body?.firstName !== undefined || body?.lastName !== undefined;
+    const firstName = typeof body?.firstName === 'string' ? body.firstName.trim() : '';
+    const lastName = typeof body?.lastName === 'string' ? body.lastName.trim() : '';
+    if (structured && (!firstName || !lastName)) return NextResponse.json({ error: 'Укажіть ім’я та прізвище.' }, { status: 400 });
+    const name = structured ? firstName + ' ' + lastName : typeof body?.name === 'string' ? body.name.trim() : '';
     const phone = typeof body?.phone === 'string' ? body.phone.replace(/[\s()-]/g, '') : '';
     if (!name || name.length > 100 || (phone && !/^\+380\d{9}$/.test(phone))) return NextResponse.json({ error: 'Укажіть ім’я (до 100 символів) та коректний номер +380XXXXXXXXX.' }, { status: 400 });
-    const updated = await UserModel.findByIdAndUpdate(user._id, { $set: { name, ...(phone ? { phone } : {}) }, ...(!phone ? { $unset: { phone: 1 } } : {}) }, { new: true, runValidators: true }).select('_id name phone email role isBanned').lean();
+    const unset = { ...(!phone ? { phone: 1 } : {}), ...(!structured ? { firstName: 1, lastName: 1 } : {}) };
+    const updated = await UserModel.findByIdAndUpdate(user._id, { $set: { name, ...(structured ? { firstName, lastName } : {}), ...(phone ? { phone } : {}) }, ...(Object.keys(unset).length ? { $unset: unset } : {}) }, { new: true, runValidators: true }).select('_id name firstName lastName phone email role isBanned').lean();
     if (!updated) return NextResponse.json({ error: 'Користувача не знайдено.' }, { status: 404 });
     return NextResponse.json({ user: { ...updated, _id: updated._id.toString() } });
   } catch (error) {

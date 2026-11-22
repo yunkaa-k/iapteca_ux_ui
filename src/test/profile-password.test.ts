@@ -15,9 +15,20 @@ describe('profile password API', () => {
     mock.profile.mockReturnValue({ select });
     const response = await PUT(request({ name: ' Олена ', phone: '+380 (67) 123-45-67', role: 'ADMIN', password: 'injected', _id: 'another-user' }));
     expect(response.status).toBe(200);
-    expect(mock.profile).toHaveBeenCalledWith('owner', { $set: { name: 'Олена', phone: '+380671234567' } }, { new: true, runValidators: true });
-    expect(select).toHaveBeenCalledWith('_id name phone email role isBanned');
+    expect(mock.profile).toHaveBeenCalledWith('owner', { $set: { name: 'Олена', phone: '+380671234567' }, $unset: { firstName: 1, lastName: 1 } }, { new: true, runValidators: true });
+    expect(select).toHaveBeenCalledWith('_id name firstName lastName phone email role isBanned');
     expect(await response.json()).toEqual({ user: { _id: 'owner', name: 'Олена', email: 'test@example.test' } });
+  });
+  it('stores structured names and the compatible full name without accepting email changes', async () => {
+    mock.profile.mockReturnValue({ select: () => ({ lean: async () => ({ _id: 'owner' }) }) });
+    const response = await PUT(request({ firstName: ' Марія Анна ', lastName: ' Коваль ', phone: '', email: 'changed@example.test' }));
+    expect(response.status).toBe(200);
+    expect(mock.profile).toHaveBeenCalledWith('owner', { $set: { name: 'Марія Анна Коваль', firstName: 'Марія Анна', lastName: 'Коваль' }, $unset: { phone: 1 } }, { new: true, runValidators: true });
+  });
+  it('rejects incomplete and oversized structured names before writing', async () => {
+    expect((await PUT(request({ firstName: 'Олена', lastName: '' }))).status).toBe(400);
+    expect((await PUT(request({ firstName: 'а'.repeat(100), lastName: 'Коваль' }))).status).toBe(400);
+    expect(mock.profile).not.toHaveBeenCalled();
   });
   it('rejects invalid contact values before writing', async () => {
     expect((await PUT(request({ name: 'Олена', phone: 'wrong' }))).status).toBe(400);

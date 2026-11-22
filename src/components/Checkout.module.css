@@ -22,11 +22,13 @@
 .input::placeholder { color: var(--iapteca-muted); opacity: 1; }
 .input[aria-invalid=true] { border-color: var(--iapteca-error); background: var(--iapteca-error-surface); }
 .fieldError { display: block; min-height: 18px; margin: 0; font-size: 12px; line-height: 18px; color: var(--iapteca-error-ink); }
-.choice { display: flex; flex-direction: column; min-height: 100px; padding: 16px; gap: 4px; border: 1px solid var(--iapteca-border); border-radius: 16px; cursor: pointer; color: var(--iapteca-text); }
-.choice > span { display: flex; align-items: center; min-height: 40px; gap: 12px; padding: 8px; font-size: 14px; line-height: 20px; font-weight: 500; }
+.demoHint { margin: 0; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; }
+.fieldError:empty { display: none; }
+.choice { display: flex; flex-direction: column; min-height: 74px; padding: 14px 16px; gap: 2px; border: 1px solid var(--iapteca-border); border-radius: 16px; cursor: pointer; color: var(--iapteca-text); }
+.choice > span { display: flex; align-items: center; min-height: 22px; gap: 12px; font-size: 14px; line-height: 20px; font-weight: 500; }
 .choice input { appearance: none; width: 22px; height: 22px; flex: 0 0 22px; border: 1.5px solid var(--iapteca-border); border-radius: 50%; background: white; cursor: pointer; }
 .choice input:checked { border: 6px solid var(--iapteca-primary); }
-.choice small { padding-left: 42px; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; }
+.choice small { padding-left: 34px; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; }
 .pickup { display: flex; flex-direction: column; gap: 12px; }
 .pickup p { margin: 0; }
 .legend { display: flex; align-items: center; gap: 8px; color: var(--iapteca-success-ink); font-size: 13px; line-height: 20px; }

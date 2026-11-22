@@ -13,6 +13,8 @@ import { useCheckoutStore } from '@/lib/store/checkoutStore';
 import { checkoutDetails, DEMO_PHARMACIES, emptyCheckout, validateCheckout, type CheckoutForm } from '@/lib/checkout';
 import { money } from '@/lib/product';
 import styles from './Checkout.module.css';
+import { DemoCardFields } from './DemoCardFields';
+import { demoPaymentOutcome, emptyDemoCard, validateDemoCard } from '@/lib/demo-payment';
 
 export function CheckoutContent({ requestId }: { requestId?: string }) {
   const cartItems = useCartStore(state => state.items);
@@ -24,18 +26,21 @@ export function CheckoutContent({ requestId }: { requestId?: string }) {
   const approved = request ? requestStatus(request) === 'approved' : prescriptionsApproved(items, prescriptions);
   const key = requestId ? 'request:' + requestId : 'cart:' + JSON.stringify(items.map(i => [i._id, i.quantity, i.price]));
   const { drafts, update, saveReceipt } = useCheckoutStore();
-  const form = drafts[key] || emptyCheckout;
+  const draft = drafts[key] || emptyCheckout;
+  const form: CheckoutForm = draft.payment === 'online-after-confirmation' ? { ...draft, payment: 'online' } : draft;
   const [touched, setTouched] = useState<Partial<Record<keyof CheckoutForm, boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [card, setCard] = useState(emptyDemoCard);
   const submitting = useRef(false);
   const centerPin = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const hydrated = useHydrated();
   const errors = validateCheckout(form);
+  const cardErrors = form.payment === 'online' ? validateDemoCard(card) : {};
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = form.receiving === 'courier' ? 59 : 0;
   const pharmacy = DEMO_PHARMACIES.find(p => p.id === form.pharmacyId);
@@ -46,20 +51,23 @@ export function CheckoutContent({ requestId }: { requestId?: string }) {
     if (submitting.current) return;
     setSubmitted(true);
     if (Object.keys(errors).length) { document.getElementById('checkout-' + Object.keys(errors)[0])?.focus(); return; }
+    if (Object.keys(cardErrors).length) { document.querySelector<HTMLInputElement>('[data-card-field="' + Object.keys(cardErrors)[0] + '"]')?.focus(); return; }
     if (!approved || (requestId && !request)) return;
     submitting.current = true; setPending(true); setError('');
     try {
       const response = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-        items: items.map(i => ({ medication: i._id, ...(i.kind === 'bundle' ? { kind: 'bundle' } : {}), quantity: i.quantity, price: i.price })), total: subtotal + deliveryFee, checkout: form,
+        items: items.map(i => ({ medication: i._id, ...(i.kind === 'bundle' ? { kind: 'bundle' } : {}), quantity: i.quantity, price: i.price })), total: subtotal + deliveryFee, checkout: { ...form, ...(form.payment === 'online' ? { demoPaymentOutcome: demoPaymentOutcome(card.number) } : {}) },
       }) });
       const data = await response.json();
       if (!response.ok) { setError(data.error || 'Не вдалося оформити замовлення. Спробуйте ще раз.'); return; }
       if (typeof data._id !== 'string') throw new Error('Missing order number');
+      if (form.payment === 'online' && (data.checkout?.paymentMode !== 'demo' || !['paid', 'failed'].includes(data.checkout?.demoPaymentStatus))) throw new Error('Missing payment result');
       const receiptItems = items.map(item => {
         const saved = data.items?.find((line: { medication: string }) => line.medication === item._id);
         return { ...item, price: typeof saved?.price === 'number' ? saved.price : item.price, quantity: saved?.quantity || item.quantity };
       });
-      saveReceipt(key, { id: data._id, createdAt: data.createdAt || new Date().toISOString(), ownerId: user?._id, items: receiptItems, total: typeof data.total === 'number' ? data.total : subtotal + deliveryFee, checkout: data.checkout || checkoutDetails(form) });
+      saveReceipt(key, { id: data._id, createdAt: data.createdAt || new Date().toISOString(), ownerId: user?._id, ...(typeof data.guestPaymentToken === 'string' ? { guestPaymentToken: data.guestPaymentToken } : {}), items: receiptItems, total: typeof data.total === 'number' ? data.total : subtotal + deliveryFee, checkout: data.checkout || checkoutDetails(form, form.payment === 'online' ? demoPaymentOutcome(card.number) : undefined) });
+      setCard(emptyDemoCard);
       if (request && user) requests.complete(request.id, user._id, data._id);
       for (const item of items) {
         const current = useCartStore.getState().items.find(line => line._id === item._id);
@@ -85,7 +93,7 @@ export function CheckoutContent({ requestId }: { requestId?: string }) {
   return <div className={styles.page}>
     <div className={styles.heading}><h1>Оформлення замовлення</h1><Link href={request ? '/profile?tab=orders&request=' + request.id : '/cart'}><Image src="/images/checkout/back.svg" alt="" width={16} height={16} />До кошика</Link></div>
     <ol className={styles.progress} aria-label="Етапи замовлення"><li className={styles.done}><span><Image src="/images/prescription/check.svg" alt="" width={16} height={16} /></span>Кошик</li><li className={styles.current} aria-current="step"><span>2</span>Оформлення</li><li><span>3</span>Підтвердження</li></ol>
-    {(error || (submitted && Object.keys(errors).length > 0)) && <p role="alert" className={styles.errorBanner}>{error || 'Перевірте обов’язкові поля та спосіб отримання.'}</p>}
+    {(error || (submitted && (Object.keys(errors).length > 0 || Object.keys(cardErrors).length > 0))) && <p role="alert" className={styles.errorBanner}>{error || 'Перевірте обов’язкові поля та спосіб отримання.'}</p>}
     <form className={styles.layout} onSubmit={handleOrder} noValidate aria-busy={pending}>
       <div className={styles.sections}>
         <section className={styles.card} aria-labelledby="checkout-contact-title"><h2 id="checkout-contact-title">Контактні дані</h2><div className={styles.twoColumns}>{field('name', 'Ім’я та прізвище *', 'Як до вас звертатися', 'name')}{field('phone', 'Номер телефону *', '+380 (__) ___ __ __', 'tel', 'tel')}</div>{field('email', 'Електронна пошта (необов’язково)', 'example@email.com', 'email', 'email')}</section>
@@ -98,7 +106,8 @@ export function CheckoutContent({ requestId }: { requestId?: string }) {
           </div>}
           {submitted && errors.receiving && <p className={styles.fieldError}>{errors.receiving}</p>}
         </fieldset>
-        <fieldset className={styles.card}><legend>Спосіб оплати</legend><div className={styles.twoColumns} id="checkout-payment">{([{ id: 'on-receipt', title: 'При отриманні', caption: 'Оплата під час отримання замовлення' }, { id: 'online-after-confirmation', title: 'Онлайн після підтвердження', caption: 'Посилання для оплати після перевірки' }] as const).map(option => <label className={styles.choice} key={option.id}><span><input type="radio" name="payment" value={option.id} checked={form.payment === option.id} disabled={pending} onChange={() => patch({ payment: option.id })} />{option.title}</span><small>{option.caption}</small></label>)}</div>{submitted && errors.payment && <p className={styles.fieldError}>{errors.payment}</p>}</fieldset>
+        <fieldset className={styles.card}><legend>Спосіб оплати</legend><div className={styles.twoColumns} id="checkout-payment">{([{ id: 'on-receipt', title: 'При отриманні', caption: 'Оплата під час отримання замовлення' }, { id: 'online', title: 'Онлайн', caption: 'Оплата банківською карткою' }] as const).map(option => <label className={styles.choice} key={option.id}><span><input type="radio" name="payment" value={option.id} checked={form.payment === option.id} disabled={pending} onChange={() => { patch({ payment: option.id }); setCard(emptyDemoCard); }} />{option.title}</span><small>{option.caption}</small></label>)}</div>{submitted && errors.payment && <p className={styles.fieldError}>{errors.payment}</p>}</fieldset>
+        {form.payment === 'online' && <DemoCardFields value={card} onChange={setCard} errors={submitted ? cardErrors : {}} disabled={pending} />}
       </div>
       <aside className={styles.summary} aria-label="Ваше замовлення"><h2>Ваше замовлення</h2><dl>{items.map(item => <div key={item._id}><dt>{item.name} × {item.quantity}</dt><dd>{money(item.price * item.quantity)}</dd></div>)}<div className={styles.divider}><dt>Товари</dt><dd>{money(subtotal)}</dd></div><div><dt>Отримання</dt><dd>{deliveryFee ? money(deliveryFee) : 'Безкоштовно'}</dd></div></dl><div className={styles.total}><span>До сплати</span><strong>{money(subtotal + deliveryFee)}</strong></div><button className={styles.primary} type="submit" disabled={pending || !started}>{pending ? 'Оформлюємо замовлення…' : 'Підтвердити замовлення'}</button><p>Перевірте контактні дані та місце отримання перед підтвердженням.</p></aside>
     </form>

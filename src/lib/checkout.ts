@@ -6,12 +6,14 @@ export const DEMO_PHARMACIES = [
 export interface CheckoutForm {
   name: string; phone: string; email: string;
   receiving: '' | 'pickup' | 'courier'; pharmacyId: string; city: string; address: string;
-  payment: '' | 'on-receipt' | 'online-after-confirmation';
+  payment: '' | 'on-receipt' | 'online-after-confirmation' | 'online';
 }
 export interface CheckoutDetails {
   contact: { name: string; phone: string; email?: string };
   delivery: { method: 'pickup' | 'courier'; pharmacyId?: string; pharmacyName?: string; city?: string; address?: string; fee: number };
-  payment: 'on-receipt' | 'online-after-confirmation';
+  payment: 'on-receipt' | 'online-after-confirmation' | 'online';
+  paymentMode?: 'demo';
+  demoPaymentStatus?: 'paid' | 'failed';
 }
 export const emptyCheckout: CheckoutForm = { name: '', phone: '', email: '', receiving: '', pharmacyId: '', city: '', address: '', payment: '' };
 export type CheckoutErrors = Partial<Record<keyof CheckoutForm, string>>;
@@ -27,15 +29,16 @@ export function validateCheckout(form: CheckoutForm): CheckoutErrors {
     if (form.city.trim().length < 2 || form.city.length > 100) errors.city = 'Укажіть місто';
     if (form.address.trim().length < 5 || form.address.length > 200) errors.address = 'Укажіть вулицю, будинок і квартиру';
   }
-  if (!['on-receipt', 'online-after-confirmation'].includes(form.payment)) errors.payment = 'Оберіть спосіб оплати.';
+  if (!['on-receipt', 'online-after-confirmation', 'online'].includes(form.payment)) errors.payment = 'Оберіть спосіб оплати.';
   return errors;
 }
-export function checkoutDetails(form: CheckoutForm): CheckoutDetails {
+export function checkoutDetails(form: CheckoutForm, outcome?: import('./demo-payment').DemoPaymentOutcome): CheckoutDetails {
   const pharmacy = DEMO_PHARMACIES.find(p => p.id === form.pharmacyId);
   return {
     contact: { name: form.name.trim(), phone: normalizePhone(form.phone), ...(form.email.trim() ? { email: form.email.trim().toLowerCase() } : {}) },
     delivery: form.receiving === 'courier' ? { method: 'courier', city: form.city.trim(), address: form.address.trim(), fee: 59 } : { method: 'pickup', pharmacyId: pharmacy!.id, pharmacyName: pharmacy!.name, address: pharmacy!.address, fee: 0 },
     payment: form.payment as CheckoutDetails['payment'],
+    ...(form.payment === 'online' && outcome ? { paymentMode: 'demo' as const, demoPaymentStatus: outcome === 'success' ? 'paid' as const : 'failed' as const } : {}),
   };
 }
 export function parseCheckout(value: unknown): { details?: CheckoutDetails; errors?: CheckoutErrors } {
@@ -43,6 +46,8 @@ export function parseCheckout(value: unknown): { details?: CheckoutDetails; erro
   const source = value as Record<string, unknown>;
   const form = Object.fromEntries(Object.keys(emptyCheckout).map(key => [key, typeof source[key] === 'string' ? source[key] : ''])) as unknown as CheckoutForm;
   const errors = validateCheckout(form);
-  return Object.keys(errors).length ? { errors } : { details: checkoutDetails(form) };
+  const outcome = source.demoPaymentOutcome;
+  if (form.payment === 'online' && outcome !== 'success' && outcome !== 'failure') errors.payment = 'Підтвердьте демонстраційну оплату.';
+  return Object.keys(errors).length ? { errors } : { details: checkoutDetails(form, outcome === 'success' || outcome === 'failure' ? outcome : undefined) };
 }
 export const orderNumber = (id: string, createdAt: string) => `IA-${new Date(createdAt).getFullYear()}-${id.slice(-8).toUpperCase()}`;
