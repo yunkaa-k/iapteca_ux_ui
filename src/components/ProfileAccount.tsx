@@ -7,6 +7,7 @@ import { Check, X, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import type { User } from '@/lib/types';
 import styles from './ProfileAccount.module.css';
+import { LogoutDialog } from './LogoutDialog';
 
 export function ProfileAccount({ user, children, initialOrders = false, requestDetails = false }: { user: User; children: ReactNode; initialOrders?: boolean; requestDetails?: boolean }) {
   const router = useRouter();
@@ -52,7 +53,7 @@ export function ProfileAccount({ user, children, initialOrders = false, requestD
         <button aria-current={!orders ? 'page' : undefined} onClick={() => { setOrders(false); router.push('/profile'); resetNotice(); }}><span className={styles.navIcon}><Image src="/images/account/profile.svg" alt="" width={22} height={22} /></span>Мій профіль</button>
         <button aria-current={orders ? 'page' : undefined} onClick={() => { setOrders(true); router.push('/profile?tab=orders'); resetNotice(); }}><Image src="/images/account/orders.svg" alt="" width={24} height={24} />Мої замовлення</button>
         {user.role === 'ADMIN' && <Link href="/admin">Адміністрування</Link>}
-        <button disabled={pending} onClick={async () => { resetNotice(); setPending(true); try { await useAuthStore.getState().logout(); router.replace('/login'); router.refresh(); } catch { setError('Не вдалося вийти. Спробуйте ще раз.'); } finally { setPending(false); } }}><Image src="/images/account/logout.svg" alt="" width={24} height={24} />Вийти з акаунта</button>
+        <LogoutDialog><button type="button" className={styles.logout} disabled={pending}><Image src="/images/account/logout.svg" alt="" width={24} height={24} />Вийти з акаунта</button></LogoutDialog>
       </aside>
       <div className={styles.main}>
         {error && <p className={styles.error} role="alert">{error}</p>}

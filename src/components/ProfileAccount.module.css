@@ -12,6 +12,7 @@
 .sidebar button img { flex-shrink: 0; }
 .navIcon { display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; }
 .sidebar button:last-child { border-top: 1px solid var(--iapteca-border); border-radius: 0; margin-top: 0; }
+.sidebar .logout { color: var(--iapteca-error-ink); }
 .sidebar button[aria-current] { background: #ebf2ff; color: var(--iapteca-primary); }
 .main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 .card { padding: 32px; display: flex; flex-direction: column; gap: 24px; }

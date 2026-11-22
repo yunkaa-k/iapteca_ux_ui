@@ -27,11 +27,10 @@ export function Header() {
           </Link>
 
           <nav className={styles.navigation} aria-label="Головна навігація">
-            <Link href="/catalog">Каталог</Link>
-            <Link href="/catalog">Аналоги</Link>
+            <Link href="/catalog" aria-current={pathname === '/catalog' ? 'page' : undefined}>Каталог</Link>
             <Link href="/prescription" aria-current={pathname === '/prescription' ? 'page' : undefined}>Рецепт</Link>
-            <Link href="/#delivery-info">Доставка</Link>
-            <Link href="/#about-iapteca">Про нас</Link>
+            <Link href="/delivery" aria-current={pathname === '/delivery' ? 'page' : undefined}>Доставка</Link>
+            <Link href="/about" aria-current={pathname === '/about' ? 'page' : undefined}>Про нас</Link>
           </nav>
         </div>
 
@@ -45,7 +44,7 @@ export function Header() {
           </Link>
 
           <Link href="/cart" className={styles.cartButton} aria-label={`Кошик, товарів: ${displayedCount}`}>
-              <Image src="/images/home/cart-header.svg" alt="" width={32} height={32} aria-hidden="true" />
+              <span className={styles.cartIcon} aria-hidden="true"><Image src="/images/home/cart-header-thin.svg" alt="" width={25.53} height={25.51} /></span>
               <span>Кошик</span>
               {displayedCount > 0 && <span className={styles.cartCount} aria-hidden="true">{displayedCount}</span>}
           </Link>

@@ -23,14 +23,14 @@ export function Footer() {
 
           <nav className={styles.column} aria-label="Інформація покупцям">
             <h2>Покупцям</h2>
-            <Link href="/#delivery-info">Доставка та оплата</Link>
+            <Link href="/delivery">Доставка та оплата</Link>
             <Link href="/prescription">Електронний рецепт</Link>
           </nav>
 
           <nav className={styles.column} id="support" aria-label="Підтримка">
             <h2>Підтримка</h2>
             <Link href="/faq">Часті запитання</Link>
-            <Link href="/#contacts">Контакти</Link>
+            <Link href="/contacts">Контакти</Link>
           </nav>
         </div>
 

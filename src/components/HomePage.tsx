@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ProductCard } from '@/components/ProductCard';
+import { KitCard } from '@/components/KitCard';
 import type { Medication, BundleProduct } from '@/lib/types';
 import styles from './HomePage.module.css';
 
@@ -117,22 +118,7 @@ export function HomePage({ featuredMedications, kits = [] }: { featuredMedicatio
           <SectionHeading id="featured-kits-heading" title="Готові аптечки" href="/kits" linkText="Усі аптечки" />
           <div className={styles.kitGrid}>
             {kits.map((kit) => (
-              <article className={styles.kitCard} key={kit.slug}>
-                <Link className={styles.kitImageLink} href={`/kits/${kit.slug}`} aria-label={`Переглянути: ${kit.name}`} prefetch={false}>
-                  <Image src={kit.image!} alt={kit.name} fill sizes="(min-width: 1280px) 255px, 22vw" />
-                </Link>
-                <div className={styles.kitDetails}>
-                  <Link className={styles.kitName} href={`/kits/${kit.slug}`} prefetch={false}>{kit.name}</Link>
-                  <p className={styles.kitSummary}>{kit.description}</p>
-                  <p className={styles.availability}><Image src="/images/home/availability-dot.svg" alt="" width={8} height={8} aria-hidden="true" />{kit.stock > 0 ? 'В наявності' : 'Немає в наявності'}</p>
-                </div>
-                <div className={styles.kitFooter}>
-                  <strong>{kit.price} грн</strong>
-                  <Link className={styles.kitAction} href={`/kits/${kit.slug}`} aria-label={`Переглянути аптечку: ${kit.name}`} prefetch={false}>
-                    <Image src="/images/home/cart-add.svg" alt="" width={20} height={20} aria-hidden="true" />
-                  </Link>
-                </div>
-              </article>
+              <KitCard key={kit._id} kit={kit} />
             ))}
           </div>
         </section>
