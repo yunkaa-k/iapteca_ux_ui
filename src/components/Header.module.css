@@ -135,7 +135,7 @@
   line-height: 1;
 }
 
-.languageIndicator {
+.languageButton {
   display: inline-flex;
   width: 80px;
   height: 48px;
@@ -156,6 +156,7 @@
 
 .iconButton:focus-visible,
 .cartButton:focus-visible,
+.languageButton:focus-visible,
 .brand:focus-visible,
 .navigation a:focus-visible {
   outline: 3px solid rgb(0 86 210 / 35%);

@@ -49,7 +49,10 @@ export function Header() {
               {displayedCount > 0 && <span className={styles.cartCount} aria-hidden="true">{displayedCount}</span>}
           </Link>
 
-          <span className={styles.languageIndicator} title="Мова інтерфейсу: українська">UA</span>
+          <button className={styles.languageButton} type="button" aria-label="Мова інтерфейсу: українська">
+            <span>UA</span>
+            <Image src="/images/home/language-chevron.svg" alt="" width={24} height={24} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </header>
