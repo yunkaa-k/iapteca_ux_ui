@@ -75,6 +75,9 @@ export function SearchAndFilters({ facets, categories, total, children, queryStr
   // Filters and rendered server results must describe the same completed request.
   const params = new URLSearchParams(queryString ?? browserParams.toString());
   const [pending, startTransition] = useTransition();
+  const [advancedOpen, setAdvancedOpen] = useState(() =>
+    ['dosage', 'packSize', 'prescription', 'onSale', ...catalogSelects.map(item => item.key)].some(key => params.has(key)),
+  );
   const search = params.get('search') || '';
   const query = catalogQuery(new URLSearchParams(params.toString()));
   const min = query.minPrice ?? 0;
@@ -129,7 +132,7 @@ export function SearchAndFilters({ facets, categories, total, children, queryStr
           <fieldset className={styles.group}><legend>Лікарська форма</legend>{dosageForms.map((form) => checkRow('form', form.value, `${form.label} (${facets.forms[form.value] || 0})`))}</fieldset>
           <fieldset className={styles.group}><legend>Наявність</legend>{checkRow('inStock', 'true', 'Лише в наявності')}</fieldset>
           <div className={styles.group}><h3>Ціна, грн</h3><PriceFilter key={`${min}:${max}`} min={Math.max(0, min)} max={max} bound={facets.maxPrice} disabled={pending} apply={(low, high) => navigate({ minPrice: low > 0 ? String(low) : null, maxPrice: high < facets.maxPrice || params.has('maxPrice') ? String(high) : null })} /></div>
-          <details className={styles.advanced} open={['dosage', 'packSize', 'prescription', 'onSale', ...catalogSelects.map(item => item.key)].some(key => params.has(key)) || undefined}>
+          <details className={styles.advanced} open={advancedOpen} onToggle={event => setAdvancedOpen(event.currentTarget.open)}>
             <summary><SlidersHorizontal size={16} aria-hidden="true" /><span>Додаткові фільтри</span><ChevronDown className={styles.advancedChevron} size={16} aria-hidden="true" /></summary>
             <div className={styles.advancedContent}>
               <fieldset className={styles.group}><legend>Дозування</legend>{(facets.dosage.length ? facets.dosage : ['200 мг', '400 мг', '500 мг', '5 мг', '60 мг']).map((dose) => checkRow('dosage', dose, dose))}</fieldset>

@@ -12,7 +12,7 @@ const navigation = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => navigation }));
 vi.mock('@/lib/useHydrated', () => ({ useHydrated: () => true }));
 const item: CartItem = { _id: 'medicine', name: 'Тестовий препарат', description: '20 табл.', manufacturer: 'Demo', category: 'Demo', stock: 5, price: 25, quantity: 1, requiresPrescription: false };
-beforeEach(() => { vi.clearAllMocks(); useCartStore.setState({ items: [item] }); useAuthStore.setState({ user: null, isLoading: false }); usePrescriptionStore.getState().clear(); useCheckoutStore.setState({ drafts: {}, receipts: {} }); });
+beforeEach(() => { vi.clearAllMocks(); useCartStore.setState({ items: [item] }); useAuthStore.setState({ user: null, isLoading: false }); usePrescriptionStore.getState().clear(); useCheckoutStore.setState({ drafts: {}, attempts: {}, receipts: {} }); });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 function contacts() {
   fireEvent.change(screen.getByLabelText('Ім’я та прізвище *'), { target: { value: 'Тестовий покупець' } });
@@ -66,10 +66,65 @@ describe('checkout and receipt', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'Недостатньо товару.' }) }));
     render(<CheckoutContent />); pickup(); fireEvent.click(screen.getByRole('button', { name: 'Підтвердити замовлення' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Недостатньо товару.');
+    expect(screen.getByRole('heading', { name: 'Не вдалося оформити замовлення' })).toHaveFocus();
     expect(useCartStore.getState().items).toHaveLength(1);
-    expect(screen.getByLabelText('Ім’я та прізвище *')).toHaveValue('Тестовий покупець');
     expect(useCheckoutStore.getState().receipts).toEqual({});
     expect(navigation.push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'До оформлення' }));
+    expect(screen.getByLabelText('Ім’я та прізвище *')).toHaveValue('Тестовий покупець');
+    expect(screen.getByRole('heading', { name: 'Оформлення замовлення' })).toHaveFocus();
+  });
+  it('uses the same submission key after a lost response and clears the attempt when the receipt is saved', async () => {
+    const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError('Response lost')).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ _id: 'restored-order', total: 25 }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    render(<CheckoutContent />);
+    pickup();
+    fireEvent.click(screen.getByRole('button', { name: 'Підтвердити замовлення' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Спробувати ще раз' }));
+
+    await waitFor(() => expect(navigation.push).toHaveBeenCalledWith('/order/result?order=restored-order'));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const key = new Headers(fetchMock.mock.calls[0][1].headers).get('Idempotency-Key');
+    expect(key).toMatch(/^[a-f\d-]{36}$/);
+    expect(new Headers(fetchMock.mock.calls[1][1].headers).get('Idempotency-Key')).toBe(key);
+    expect(useCheckoutStore.getState().attempts).toEqual({});
+  });
+  it('uses a fresh submission key after a meaningful checkout edit', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'Недостатньо товару.' }) });
+    vi.stubGlobal('fetch', fetchMock);
+    render(<CheckoutContent />);
+    pickup();
+    fireEvent.click(screen.getByRole('button', { name: 'Підтвердити замовлення' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'До оформлення' }));
+    fireEvent.change(screen.getByLabelText('Ім’я та прізвище *'), { target: { value: 'Інший покупець' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Підтвердити замовлення' }));
+    await screen.findByRole('heading', { name: 'Не вдалося оформити замовлення' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const keys = fetchMock.mock.calls.map(([, options]) => new Headers(options.headers).get('Idempotency-Key'));
+    expect(keys.every(key => key)).toBe(true);
+    expect(new Set(keys).size).toBe(2);
+  });
+  it('offers courier delivery when no pharmacy can fulfill the combined demo basket', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    useCartStore.setState({ items: [
+      { ...item, name: 'Нурофен 200 мг №24', price: 145 },
+      { ...item, _id: 'travel-kit', kind: 'bundle', slug: 'travel', name: 'Аптечка «Для подорожі»', price: 249 },
+    ] });
+    render(<CheckoutContent />);
+    contacts();
+    fireEvent.click(screen.getByRole('radio', { name: /^Самовивіз з аптеки/ }));
+    expect(screen.getByRole('heading', { name: 'Немає аптеки з усіма товарами' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Повернутися до кошика' })).toHaveAttribute('href', '/cart');
+    expect(screen.queryByRole('button', { name: 'Обрати iApteca · Центр' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Підтвердити замовлення' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Обрати доставку' }));
+    expect(screen.getByRole('radio', { name: /^Кур’єрська доставка/ })).toBeChecked();
+    expect(screen.getByLabelText('Місто *')).toHaveFocus();
+    expect(screen.getByLabelText('Ім’я та прізвище *')).toHaveValue('Тестовий покупець');
+    expect(screen.getByRole('complementary', { name: 'Ваше замовлення' })).toHaveTextContent('453 грн');
   });
   it('does not invent order data when receipt storage is missing', () => {
     render(<OrderResult orderId="unknown" />);

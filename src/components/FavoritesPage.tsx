@@ -76,7 +76,7 @@ export function FavoritesPage() {
             <p>Загальна вартість <strong>{total.toLocaleString('uk-UA', { maximumFractionDigits: 2 })} грн</strong></p>
             <div className={styles.actions}>
               <button className={styles.primaryButton} type="button" disabled={adding} onClick={addAll}>{adding ? 'Перевіряємо наявність…' : 'Додати все до кошика'}</button>
-              <button className={styles.secondaryButton} type="button" disabled={adding} onClick={clear}>Очистити обране</button>
+              <button className={styles.clearButton} type="button" disabled={adding} onClick={clear}>Очистити обране</button>
             </div>
           </div>
           <div className={styles.grid} aria-label="Збережені товари">
