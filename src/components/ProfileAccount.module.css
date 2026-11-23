@@ -38,7 +38,11 @@
 .securityEditing { gap: 8px; }
 .securityEditing .form > p { margin: 0; }
 .passwordGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
-.passwordGrid .passwordLabel { max-width: none; min-width: 0; color: var(--iapteca-text); }
+.passwordGrid .passwordLabel { max-width: none; min-width: 0; color: var(--iapteca-text); font-weight: 500; line-height: 20px; }
+.passwordGrid input { border-radius: 12px; font-weight: 500; }
+.securityEditing .passwordActions button { min-height: 54px; padding-inline: 16px; line-height: 22px; }
+.securityEditing .fieldError { font-size: 12px; font-weight: 400; }
+.securityEditing .passwordHint { font-weight: 400; }
 .passwordGrid .passwordLabel:first-child { grid-column: 1; }
 .passwordGrid .passwordLabel:nth-child(2) { grid-column: 1; grid-row: 2; }
 .passwordGrid .passwordLabel:nth-child(3) { grid-column: 2; grid-row: 2; }

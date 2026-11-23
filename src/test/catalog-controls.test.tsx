@@ -17,6 +17,43 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe('catalog URL controls', () => {
+  it('refreshes repeated filter combinations instead of reusing a stale navigation URL', () => {
+    navigation.query = 'prescription=not-required&sort=price_desc';
+    const result = render(view());
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Рецептурні' }));
+    const both = lastUrl();
+    expect(both.searchParams.getAll('prescription')).toEqual(['not-required', 'required']);
+    navigation.query = both.searchParams.toString();
+    result.rerender(view());
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Рецептурні' }));
+    const single = lastUrl();
+    expect(single.searchParams.getAll('prescription')).toEqual(['not-required']);
+    expect(single.searchParams.get('sort')).toBe('price_desc');
+    navigation.query = single.searchParams.toString();
+    result.rerender(view());
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Рецептурні' }));
+    const bothAgain = lastUrl();
+    expect(bothAgain.searchParams.getAll('prescription')).toEqual(['not-required', 'required']);
+    expect(bothAgain.href).not.toBe(both.href);
+    expect(bothAgain.searchParams.getAll('_revision')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: /Прибрати фільтр:.*revision/ })).not.toBeInTheDocument();
+  });
+
+  it('keeps filters and results on the same server snapshot while the browser URL changes', () => {
+    navigation.query = 'prescription=not-required&prescription=required';
+    const result = render(<SearchAndFilters queryString="prescription=not-required" facets={facets} categories={[]} total={10}><p>OTC results</p></SearchAndFilters>);
+    fireEvent.click(screen.getByText('Додаткові фільтри'));
+    expect(screen.getByRole('checkbox', { name: 'Без рецепта' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('checkbox', { name: 'Рецептурні' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('status')).toHaveTextContent('Знайдено 10 товарів');
+    result.rerender(<SearchAndFilters queryString="prescription=required" facets={facets} categories={[]} total={1}><p>Rx results</p></SearchAndFilters>);
+    expect(screen.getByRole('checkbox', { name: 'Без рецепта' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('checkbox', { name: 'Рецептурні' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('Знайдено 1 товарів');
+    expect(screen.queryByText('OTC results')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Рецептурні' }));
+    expect(lastUrl().searchParams.has('prescription')).toBe(false);
+  });
   it('shows the 0–10000 price range with two accessible slider handles', () => {
     render(view());
     expect(screen.getByRole('spinbutton', { name: 'Мінімальна ціна' })).toHaveValue(0);

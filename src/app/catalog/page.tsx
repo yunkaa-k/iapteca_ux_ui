@@ -40,7 +40,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
   return (
     <Suspense>
-      <SearchAndFilters facets={facets} categories={JSON.parse(JSON.stringify(categories)) as Category[]} total={total}>
+      <SearchAndFilters queryString={params.toString()} facets={facets} categories={JSON.parse(JSON.stringify(categories)) as Category[]} total={total}>
         {medications.length ? (
           <>
             <div className={styles.products}>

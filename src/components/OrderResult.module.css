@@ -2,6 +2,7 @@
 .receipt { width: min(1030px,100%); margin-inline: auto; padding: 40px; display: flex; flex-direction: column; gap: 28px; border: 1px solid var(--iapteca-border); border-radius: 20px; background: white; }
 .heading { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 .success { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--iapteca-success-surface); }
+.failure { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--iapteca-error-surface); }
 .heading h1, .receipt > h1 { font-size: 32px; line-height: 44px; font-weight: 700; margin: 0; }
 .heading p { margin: 0; font-size: 14px; color: var(--iapteca-muted); }
 .digitalReceipt { width: 100%; }

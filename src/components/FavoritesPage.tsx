@@ -82,7 +82,6 @@ export function FavoritesPage() {
           <div className={styles.grid} aria-label="Збережені товари">
             {items.map((item) => <ProductCard key={item.medication._id} {...item} variant="featured" />)}
           </div>
-          <div className={styles.cartLink}><Link className={styles.secondaryButton} href="/cart">Переглянути кошик</Link></div>
         </>
       )}
     </div>

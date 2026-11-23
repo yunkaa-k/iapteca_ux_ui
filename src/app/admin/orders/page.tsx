@@ -16,6 +16,7 @@ export default function OrdersAdmin() {
   const upStat = async (id: string, status: string) => {
     const res = await fetch(`/api/orders/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
     if (res.ok) { toast.success('Статус оновлено'); load(); }
+    else { const data = await res.json().catch(() => ({})); toast.error(data.error || 'Не вдалося оновити статус'); }
   };
 
   return (

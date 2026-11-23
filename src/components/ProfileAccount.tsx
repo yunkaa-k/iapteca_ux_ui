@@ -3,14 +3,14 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Check, X, Eye, EyeOff } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import type { User } from '@/lib/types';
 import styles from './ProfileAccount.module.css';
 import { LogoutDialog } from './LogoutDialog';
 import { profileNames } from '@/lib/profile';
 
-export function ProfileAccount({ user, children, initialOrders = false, requestDetails = false }: { user: User; children: ReactNode; initialOrders?: boolean; requestDetails?: boolean }) {
+export function ProfileAccount({ user, children, initialOrders = false, requestDetails = false, orderDetails = false }: { user: User; children: ReactNode; initialOrders?: boolean; requestDetails?: boolean; orderDetails?: boolean }) {
   const router = useRouter();
   const [profile, setProfile] = useState(user);
   const [editing, setEditing] = useState(false);
@@ -27,9 +27,9 @@ export function ProfileAccount({ user, children, initialOrders = false, requestD
   useEffect(() => { if (!message) return; const timer = setTimeout(() => setMessage(''), 5000); return () => clearTimeout(timer); }, [message]);
   function resetNotice() { setError(''); setMessage(''); setPasswordErrors([]); }
   async function save(event: FormEvent, password: boolean) {
-    event.preventDefault(); resetNotice();
+    event.preventDefault(); if (pending) return; setError(''); setMessage(''); if (!password) setPasswordErrors([]);
     if (password) {
-      const validation = [!passwords[0] ? 'Введіть поточний пароль.' : '', passwords[1].length < 8 ? 'Пароль має містити щонайменше 8 символів.' : new TextEncoder().encode(passwords[1]).length > 72 ? 'Пароль має містити не більше 72 байтів.' : passwords[1] === passwords[0] ? 'Новий пароль має відрізнятися від поточного.' : '', passwords[2] !== passwords[1] ? 'Паролі не збігаються. Повторіть новий пароль.' : ''];
+      const validation = [!passwords[0] ? 'Введіть поточний пароль.' : passwordErrors[0] || '', passwords[1].length < 8 ? 'Пароль має містити щонайменше 8 символів.' : new TextEncoder().encode(passwords[1]).length > 72 ? 'Пароль має містити не більше 72 байтів.' : passwords[1] === passwords[0] ? 'Новий пароль має відрізнятися від поточного.' : '', passwords[2] !== passwords[1] ? 'Паролі не збігаються. Повторіть новий пароль.' : ''];
       if (validation.some(Boolean)) { setPasswordErrors(validation); return; }
     }
     setPending(true);
@@ -45,8 +45,8 @@ export function ProfileAccount({ user, children, initialOrders = false, requestD
   }
   return <div className={styles.page}>
     <nav className={styles.breadcrumbs} aria-label="Навігаційний шлях"><Link href="/">Головна</Link> / Особистий кабінет{orders && ' / Мої замовлення'}{orders && requestDetails && ' / Заявка'}</nav>
-    <h1>{orders ? requestDetails ? 'Деталі заявки' : 'Мої замовлення' : 'Особистий кабінет'}</h1>
-    <p className={styles.subtitle}>{orders ? requestDetails ? 'Товари, прикріплений рецепт і результат його перевірки.' : 'Заявки на перевірку рецепта, оформлені замовлення та статуси їх отримання.' : editing ? 'Оновіть контактні дані для наступних замовлень.' : 'Керуйте особистими даними та переглядайте свої замовлення.'}</p>
+    <h1>{orders ? orderDetails ? 'Деталі замовлення' : requestDetails ? 'Деталі заявки' : 'Мої замовлення' : 'Особистий кабінет'}</h1>
+    <p className={styles.subtitle}>{orders ? orderDetails ? 'Уся інформація про товари, оплату та спосіб отримання.' : requestDetails ? 'Товари, прикріплений рецепт і результат його перевірки.' : 'Заявки на перевірку рецепта, оформлені замовлення та статуси їх отримання.' : editing ? 'Оновіть контактні дані для наступних замовлень.' : 'Керуйте особистими даними та переглядайте свої замовлення.'}</p>
     {message && <div className={styles.toast} role="status"><span className={styles.toastIcon}><Check size={16} aria-hidden="true" /></span><span>{message}</span><button type="button" aria-label="Закрити сповіщення" onClick={() => setMessage('')}><X size={16} aria-hidden="true" /></button></div>}
     <div className={styles.columns}>
       <aside className={styles.sidebar} aria-label="Особистий кабінет">
@@ -71,7 +71,7 @@ export function ProfileAccount({ user, children, initialOrders = false, requestD
             </form>
           </section>
           <section className={`${styles.card} ${changingPassword ? styles.securityEditing : ''}`} aria-labelledby="security-title"><h2 id="security-title">Пароль та безпека</h2>
-            {changingPassword ? <form className={styles.form} noValidate onSubmit={e => save(e, true)}><p>Введіть поточний пароль та створіть новий.</p><div className={styles.passwordGrid}>{['Поточний пароль', 'Новий пароль', 'Підтвердіть новий пароль'].map((label, index) => <label key={label} className={styles.passwordLabel}>{label}<span className={styles.passwordField}><input aria-invalid={!!passwordErrors[index]} aria-describedby={passwordErrors[index] ? `password-field-error-${index}` : index === 1 ? 'new-password-help' : undefined} type={visible[index] ? 'text' : 'password'} value={passwords[index]} autoComplete={index === 0 ? 'current-password' : 'new-password'} required minLength={index ? 8 : undefined} disabled={pending} onChange={e => setPasswords(values => values.map((v, i) => i === index ? e.target.value : v))} /><button type="button" disabled={pending} aria-label={`${visible[index] ? 'Приховати' : 'Показати'}: ${label}`} aria-pressed={visible[index]} onClick={() => setVisible(values => values.map((v, i) => i === index ? !v : v))}>{visible[index] ? <EyeOff size={20} /> : <Eye size={20} />}</button></span>{passwordErrors[index] && <span className={styles.fieldError} id={`password-field-error-${index}`} role="alert">{passwordErrors[index]}</span>}{index === 1 && <span className={styles.passwordHint} id="new-password-help">Мінімум 8 символів</span>}</label>)}</div><div className={styles.passwordActions}><button className={styles.primary} disabled={pending}>Зберегти пароль</button><button className={styles.secondary} type="button" disabled={pending} onClick={() => { setChangingPassword(false); setPasswords(['', '', '']); setVisible([false, false, false]); resetNotice(); }}>Скасувати</button></div></form> : <div className={styles.row}><div><strong>Пароль до акаунта</strong><p>Оновіть пароль для захисту вашого акаунта.</p></div><button className={styles.secondary} onClick={() => { setChangingPassword(true); resetNotice(); }}>Змінити пароль</button></div>}
+            {changingPassword ? <form className={styles.form} noValidate onSubmit={e => save(e, true)}><p>Введіть поточний пароль та створіть новий.</p><div className={styles.passwordGrid}>{['Поточний пароль', 'Новий пароль', 'Підтвердіть новий пароль'].map((label, index) => <div key={label} className={styles.passwordLabel}><label htmlFor={`profile-password-${index}`}>{label}</label><span className={styles.passwordField}><input id={`profile-password-${index}`} aria-invalid={!!passwordErrors[index]} aria-describedby={[passwordErrors[index] ? `password-field-error-${index}` : '', index === 1 ? 'new-password-help' : ''].filter(Boolean).join(' ') || undefined} type={visible[index] ? 'text' : 'password'} value={passwords[index]} autoComplete={index === 0 ? 'current-password' : 'new-password'} required minLength={index ? 8 : undefined} disabled={pending} onChange={e => { setPasswords(values => values.map((v, i) => i === index ? e.target.value : v)); setPasswordErrors(values => values.map((v, i) => i === index || (index === 1 && i === 2) ? '' : v)); setError(''); }} /><button type="button" disabled={pending} aria-label={`${visible[index] ? 'Приховати' : 'Показати'}: ${label}`} aria-pressed={visible[index]} onClick={() => setVisible(values => values.map((v, i) => i === index ? !v : v))}><Image src={visible[index] ? '/images/auth/eye-off.svg' : '/images/auth/eye.svg'} alt="" width={24} height={24} /></button></span>{passwordErrors[index] && <span className={styles.fieldError} id={`password-field-error-${index}`} role="alert">{passwordErrors[index]}</span>}{index === 1 && <span className={styles.passwordHint} id="new-password-help">Мінімум 8 символів</span>}</div>)}</div><div className={styles.passwordActions}><button className={styles.primary} disabled={pending}>Зберегти пароль</button><button className={styles.secondary} type="button" disabled={pending} onClick={() => { setChangingPassword(false); setPasswords(['', '', '']); setVisible([false, false, false]); resetNotice(); }}>Скасувати</button></div></form> : <div className={styles.row}><div><strong>Пароль до акаунта</strong><p>Оновіть пароль для захисту вашого акаунта.</p></div><button className={styles.secondary} onClick={() => { setChangingPassword(true); resetNotice(); }}>Змінити пароль</button></div>}
           </section>
         </>}
       </div>

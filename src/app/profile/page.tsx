@@ -5,8 +5,8 @@ import { ProfileAccount } from '@/components/ProfileAccount';
 import { AccountOrders, type AccountOrder } from '@/components/AccountOrders';
 import type { Medication, Order } from '@/lib/types';
 
-export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string; request?: string }> }) {
-  const { tab, request } = await searchParams;
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string; request?: string; order?: string }> }) {
+  const { tab, request, order } = await searchParams;
   const user = await getAuthUser();
   if (!user) redirect('/login');
   await connectDB();
@@ -22,7 +22,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       return { _id: item.medication.toString(), kind: item.kind, slug: item.slug, name: item.name || medication?.name || 'Препарат', description: item.description || medication?.description || '', manufacturer: medication?.manufacturer || '', category: medication?.category || '', stock: medication?.stock || 0, image: item.image || medication?.image, price: item.price, quantity: item.quantity };
     }),
   }));
-  return <ProfileAccount key={request || tab || 'profile'} user={user} initialOrders={tab === 'orders' || !!request} requestDetails={!!request}>
-    <AccountOrders ownerId={user._id} orders={orders} requestId={request} />
+  return <ProfileAccount key={order || request || tab || 'profile'} user={user} initialOrders={tab === 'orders' || !!request || !!order} requestDetails={!!request && !order} orderDetails={!!order}>
+    <AccountOrders ownerId={user._id} orders={orders} requestId={request} orderId={order} />
   </ProfileAccount>;
 }

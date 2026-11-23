@@ -13,6 +13,7 @@
 .card h3 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; }
 .card p, .note, .mission p, .cta p { margin: 0; font-size: 16px; line-height: 1.4; font-weight: 500; color: var(--iapteca-text-secondary); }
 .receiving { gap: 12px; }
+.receivingIcon { flex: 0 0 24px; }
 .titleRow { display: flex; align-items: center; gap: 12px; }
 .titleRow h3 { flex: 1; min-width: 0; }
 .badge { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--iapteca-success-surface); color: var(--iapteca-success-ink); font-size: 13px; line-height: 18px; font-weight: 600; }

@@ -1,0 +1,10 @@
+{
+  "Валідол-Дарниця 60 мг №10": { "requiresPrescription": false, "source": "https://darnytsia.ua/catalog/validol-darnitsya" },
+  "Парацетамол 500 мг №10": { "requiresPrescription": false, "source": "https://darnytsia.ua/catalog/paratsetamol-darnitsya" },
+  "Цитрамон-Дарниця №10": { "requiresPrescription": false, "source": "https://drlz.moz.gov.ua/register/product/29711" },
+  "Ібупрофен-Дарниця №20": { "requiresPrescription": false, "source": "https://drlz.moz.gov.ua/register/product/27795" },
+  "Ревіт драже №100": { "requiresPrescription": false, "source": "https://drlz.moz.gov.ua/register/product/28931" },
+  "Бісакодил-Дарниця 5 мг №30": { "requiresPrescription": false, "source": "https://darnytsia.ua/catalog/bisakodil-darnitsya" },
+  "Нурофен Форте №12": { "requiresPrescription": false, "source": "https://drlz.moz.gov.ua/register/product/34012" },
+  "Метилурацил з мірамістином 30 г": { "requiresPrescription": false, "source": "https://darnytsia.ua/catalog/metiluratsil-z-miramistinom" }
+}

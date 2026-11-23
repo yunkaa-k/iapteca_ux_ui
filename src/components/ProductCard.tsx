@@ -60,10 +60,10 @@ export function ProductCard({ medication: m, variant = 'default', imageOverride,
 
         {favoriteButton}
 
-        <Link className={styles.featuredTitle} href={productHref(m)}>{m.name}</Link>
+        <Link className={styles.featuredTitle} href={productHref(m)} title={m.name}>{m.name}</Link>
         <p className={styles.featuredSummary}>{summary || m.description}</p>
         <p className={`${styles.featuredAvailability} ${m.stock <= 0 ? styles.featuredOutOfStock : ''}`}>
-          <Image src="/images/home/availability-dot.svg" alt="" width={8} height={8} aria-hidden="true" />
+          <Image src={m.stock > 0 ? '/images/home/availability-dot.svg' : '/images/home/availability-error-dot.svg'} alt="" width={8} height={8} aria-hidden="true" />
           {m.stock > 0 ? 'В наявності' : 'Немає в наявності'}
         </p>
         <div className={styles.featuredFooter}>

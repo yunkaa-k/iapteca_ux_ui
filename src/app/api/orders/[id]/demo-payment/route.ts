@@ -19,7 +19,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (outcome !== 'success' && outcome !== 'failure') return NextResponse.json({ error: 'Підтвердьте дані повторної оплати.' }, { status: 400 });
   try {
     await connectDB();
-    const filter = { _id: id, ...access, status: { $in: ['PENDING', 'CONFIRMED'] }, 'checkout.payment': 'online', 'checkout.paymentMode': 'demo' };
+    const filter = { _id: id, ...access, status: { $in: ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP'] }, 'checkout.payment': 'online', 'checkout.paymentMode': 'demo' };
     const updated = await OrderModel.findOneAndUpdate({ ...filter, 'checkout.demoPaymentStatus': 'failed' }, { $set: { 'checkout.demoPaymentStatus': outcome === 'success' ? 'paid' : 'failed' } }, { new: true });
     if (updated) return NextResponse.json({ checkout: updated.checkout });
     // Idempotent retry after a lost response. Paid orders never become unpaid.

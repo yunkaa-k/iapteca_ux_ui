@@ -12,7 +12,10 @@ import { requestStatus, usePrescriptionRequestStore, type PrescriptionRequest } 
 import type { CartItem } from '@/lib/store/cartStore';
 import type { Order } from '@/lib/types';
 import styles from './AccountOrders.module.css';
-import { DemoPaymentNotice } from './DemoPaymentNotice';
+import { OrderProducts as ProductRows } from './OrderProducts';
+import { OrderDetails } from './OrderDetails';
+import { orderDisplay } from '@/lib/order-display';
+import { orderNumber } from '@/lib/checkout';
 
 export type AccountOrder = Omit<Order, 'items' | 'createdAt'> & { items: CartItem[]; createdAt: string };
 const date = (time: number | string) => new Intl.DateTimeFormat('uk-UA', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Kyiv' }).format(new Date(time));
@@ -26,14 +29,7 @@ const descriptions = {
 };
 const total = (items: CartItem[]) => items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-function ProductRows({ items }: { items: CartItem[] }) {
-  return <div className={styles.products}>{items.map(item => <div className={styles.product} key={item._id}>
-    <div className={styles.productImage}>{item.image && <Image src={item.image} alt="" fill sizes="104px" />}</div>
-    <div className={styles.productText}><strong>{item.name}</strong><p>{item.description}</p></div><span className={styles.quantity}>{item.quantity} шт.</span><strong className={styles.price}>{money(item.price * item.quantity)}</strong>
-  </div>)}</div>;
-}
-
-export function AccountOrders({ ownerId, orders, requestId }: { ownerId: string; orders: AccountOrder[]; requestId?: string }) {
+export function AccountOrders({ ownerId, orders, requestId, orderId }: { ownerId: string; orders: AccountOrder[]; requestId?: string; orderId?: string }) {
   const { requests, settle, cancel } = usePrescriptionRequestStore();
   const hydrated = useHydrated();
   const router = useRouter();
@@ -45,6 +41,10 @@ export function AccountOrders({ ownerId, orders, requestId }: { ownerId: string;
     const timer = setInterval(settle, 250); return () => clearInterval(timer);
   }, [settle, pending]);
   if (!hydrated) return <p role="status">Завантажуємо замовлення…</p>;
+  if (orderId) {
+    const order = orders.find(item => item._id === orderId && item.user === ownerId);
+    return order ? <OrderDetails key={JSON.stringify([order._id, order.status, order.checkout])} order={order} /> : <section className={styles.panel}><h2>Замовлення недоступне</h2><p>У цьому акаунті такого замовлення немає.</p><Link className={styles.back} href="/profile?tab=orders">← До моїх замовлень</Link></section>;
+  }
   const request = mine.find(r => r.id === requestId);
   if (requestId && !request) return <section className={styles.panel}><h2>Заявка недоступна</h2><p>У цьому акаунті та поточній браузерній сесії такої заявки немає.</p><Link className={styles.textLink} href="/profile?tab=orders">← До моїх замовлень</Link></section>;
   if (request) {
@@ -74,9 +74,10 @@ export function AccountOrders({ ownerId, orders, requestId }: { ownerId: string;
     {active.length > 0 && <section className={styles.requests} aria-label="Заявки на замовлення"><h2>Заявки на замовлення · {active.length}</h2><p>Тут можна перевірити рецепт і продовжити оформлення. Інші покупки можна робити окремо.</p>{active.map(r => <RequestCard request={r} key={r.id} />)}</section>}
     <h2 className={styles.sectionHeading}>Оформлені замовлення · {orders.length}</h2>
     {orders.length === 0 ? <section className={styles.panel}><h2>Замовлень ще немає</h2><p>Оформлені замовлення з’являться тут.</p><Link className={styles.secondary} href="/catalog">Перейти до каталогу</Link></section> : orders.map(order => <section className={styles.orderCard} key={order._id}>
-      <div className={styles.heading}><div><h2>Замовлення № {order._id.slice(-6).toUpperCase()}</h2><p>{date(order.createdAt)}</p></div><span className={`${styles.badge} ${order.status === 'CANCELLED' ? styles.cancelled : order.status === 'COMPLETED' ? styles.approved : styles.reviewing}`}>{({ PENDING: 'В обробці', CONFIRMED: 'Підтверджено', COMPLETED: 'Отримано', CANCELLED: 'Скасовано' })[order.status]}</span></div>
+      <div className={styles.heading}><div><h2>Замовлення № {orderNumber(order._id, order.createdAt)}</h2><p>{date(order.createdAt)}</p></div><span className={`${styles.badge} ${styles[orderDisplay(order).badgeState]}`}>{orderDisplay(order).badge}</span></div>
+      {order.items.length > 0 && order.items.every(item => item.name.startsWith('[ДЕМО]')) && <p className={styles.demoCaption}>Демонстраційне замовлення</p>}
       <div className={styles.cardSummary}><Thumbnails items={order.items} /><span>{order.items.length} товарів</span><strong>{money(order.total)}</strong></div>
-      <details><summary className={styles.textLink}>Переглянути замовлення</summary><ProductRows items={order.items} />{order.checkout && order.status !== 'CANCELLED' && <DemoPaymentNotice orderId={order._id} checkout={order.checkout} onPaid={() => router.refresh()} />}</details>
+      <Link className={styles.textLink} href={'/profile?tab=orders&order=' + encodeURIComponent(order._id)}>Переглянути замовлення</Link>
     </section>)}
   </>;
 }

@@ -14,6 +14,7 @@ export interface CheckoutDetails {
   payment: 'on-receipt' | 'online-after-confirmation' | 'online';
   paymentMode?: 'demo';
   demoPaymentStatus?: 'paid' | 'failed';
+  demoRefundStatus?: 'pending';
 }
 export const emptyCheckout: CheckoutForm = { name: '', phone: '', email: '', receiving: '', pharmacyId: '', city: '', address: '', payment: '' };
 export type CheckoutErrors = Partial<Record<keyof CheckoutForm, string>>;

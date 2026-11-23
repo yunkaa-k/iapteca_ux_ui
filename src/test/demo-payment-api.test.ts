@@ -22,7 +22,7 @@ describe('private demo payment retry', () => {
     mocks.update.mockResolvedValue({ checkout });
     const response = await POST(request(token), context);
     expect(response.status).toBe(200);
-    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ _id: id, user: { $exists: false }, guestPaymentTokenHash: createHash('sha256').update(token).digest('hex'), status: { $in: ['PENDING', 'CONFIRMED'] }, 'checkout.demoPaymentStatus': 'failed' }), { $set: { 'checkout.demoPaymentStatus': 'paid' } }, { new: true });
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ _id: id, user: { $exists: false }, guestPaymentTokenHash: createHash('sha256').update(token).digest('hex'), status: { $in: ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP'] }, 'checkout.demoPaymentStatus': 'failed' }), { $set: { 'checkout.demoPaymentStatus': 'paid' } }, { new: true });
     expect(await response.json()).toEqual({ checkout });
   });
   it('uses the authenticated owner and never a caller-supplied user ID', async () => {
@@ -33,7 +33,7 @@ describe('private demo payment retry', () => {
   it('is idempotent after success and rejects cancelled or inaccessible orders', async () => {
     mocks.update.mockResolvedValue(null); mocks.find.mockResolvedValue({ checkout });
     expect((await POST(request(token), context)).status).toBe(200);
-    expect(mocks.find).toHaveBeenCalledWith(expect.objectContaining({ 'checkout.demoPaymentStatus': 'paid', status: { $in: ['PENDING', 'CONFIRMED'] } }));
+    expect(mocks.find).toHaveBeenCalledWith(expect.objectContaining({ 'checkout.demoPaymentStatus': 'paid', status: { $in: ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP'] } }));
     mocks.find.mockResolvedValue(null);
     expect((await POST(request(token), context)).status).toBe(404);
   });

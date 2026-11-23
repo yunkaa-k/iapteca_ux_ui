@@ -2,6 +2,8 @@
 
 import { useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Select as SelectPrimitive } from 'radix-ui';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Slider } from 'radix-ui';
 import { SlidersHorizontal, ChevronDown } from 'lucide-react';
@@ -21,6 +23,17 @@ function CatalogSelect({ id, label, value, placeholder, options, onChange, disab
       <SelectContent><SelectItem value="__all__">{placeholder}</SelectItem>{entries.filter((entry) => entry.value && entry.value !== '__all__').map((entry) => <SelectItem key={entry.value} value={entry.value}>{entry.label}</SelectItem>)}</SelectContent>
     </Select>
   );
+}
+
+function CatalogSort({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled: boolean }) {
+  return <Select value={value} onValueChange={onChange} disabled={disabled}>
+    <SelectTrigger id="catalog-sort" className={styles.select} aria-label="Сортування товарів"><SelectValue>{value === 'price_desc' ? 'За ціною: спочатку дорожчі' : value === 'newest' ? 'Спочатку нові' : 'За ціною: спочатку дешевші'}</SelectValue></SelectTrigger>
+    <SelectPrimitive.Portal><SelectPrimitive.Content position="popper" side="bottom" align="end" sideOffset={4} className={styles.sortMenu}>
+      <SelectPrimitive.Viewport>{[{ value: 'price_asc', label: 'Спочатку дешевші' }, { value: 'price_desc', label: 'Спочатку дорожчі' }].map(option => <SelectPrimitive.Item className={styles.sortOption} value={option.value} key={option.value}>
+        <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText><SelectPrimitive.ItemIndicator><Image src="/images/catalog/sort-check.svg" width={20} height={20} alt="" /></SelectPrimitive.ItemIndicator>
+      </SelectPrimitive.Item>)}</SelectPrimitive.Viewport>
+    </SelectPrimitive.Content></SelectPrimitive.Portal>
+  </Select>;
 }
 
 function PriceFilter({ min, max, bound, disabled, apply }: { min: number; max: number; bound: number; disabled: boolean; apply: (min: number, max: number) => void }) {
@@ -56,31 +69,42 @@ function PriceFilter({ min, max, bound, disabled, apply }: { min: number; max: n
   );
 }
 
-export function SearchAndFilters({ facets, categories, total, children }: { facets: CatalogFacets; categories: Category[]; total: number; children: ReactNode }) {
+export function SearchAndFilters({ facets, categories, total, children, queryString }: { facets: CatalogFacets; categories: Category[]; total: number; children: ReactNode; queryString?: string }) {
   const router = useRouter();
-  const params = useSearchParams();
+  const browserParams = useSearchParams();
+  // Filters and rendered server results must describe the same completed request.
+  const params = new URLSearchParams(queryString ?? browserParams.toString());
   const [pending, startTransition] = useTransition();
   const search = params.get('search') || '';
   const query = catalogQuery(new URLSearchParams(params.toString()));
   const min = query.minPrice ?? 0;
   const max = query.maxPrice ?? facets.maxPrice;
 
+  function pushCatalog(next: URLSearchParams) {
+    // Distinguish repeated filter navigations in Next 16's client route cache.
+    // This internal parameter is ignored by catalogQuery and filter chips.
+    next.set('_revision', crypto.randomUUID());
+    startTransition(() => router.push(`/catalog?${next}`, { scroll: false }));
+  }
   function navigate(changes: Record<string, string | string[] | null>) {
     const next = new URLSearchParams(params.toString());
+    next.delete('_revision');
     next.delete('page');
     for (const [key, value] of Object.entries(changes)) {
       next.delete(key);
       for (const entry of Array.isArray(value) ? value : value ? [value] : []) next.append(key, entry);
     }
-    if (next.toString() === params.toString()) return;
-    startTransition(() => router.push(`/catalog${next.size ? `?${next}` : ''}`, { scroll: false }));
+    const current = new URLSearchParams(params.toString());
+    current.delete('_revision');
+    if (next.toString() === current.toString()) return;
+    pushCatalog(next);
   }
   function toggle(key: string, value: string, checked: boolean) {
     const selected = params.getAll(key);
     navigate({ [key]: checked ? [...selected.filter((entry) => entry !== value), value] : selected.filter((entry) => entry !== value) });
   }
   function resetFilters() {
-    startTransition(() => router.push(`/catalog${search ? `?search=${encodeURIComponent(search)}` : ''}`, { scroll: false }));
+    pushCatalog(new URLSearchParams(search ? { search } : {}));
   }
   const chipLabels: Record<string, string> = { category: 'Категорія', form: 'Форма', dosage: 'Дозування', packSize: 'Упаковка', prescription: 'Рецептурність', inStock: 'Лише в наявності', minPrice: 'Від', maxPrice: 'До', onSale: 'Акційні товари', ...Object.fromEntries(catalogSelects.map((item) => [item.key, item.label])) };
   const chips = Array.from(params.entries()).filter(([key, value]) => key in chipLabels && value !== '' && !(['inStock', 'onSale'].includes(key) && value !== 'true'));
@@ -96,7 +120,7 @@ export function SearchAndFilters({ facets, categories, total, children }: { face
       <nav className={styles.breadcrumbs} aria-label="Навігаційний шлях"><Link href="/">Головна</Link><span aria-hidden="true">/</span><span aria-current="page">Каталог</span></nav>
       <header className={styles.heading}><h1>{search ? 'Результати пошуку' : 'Каталог товарів'}</h1><p>Знаходьте препарати та уточнюйте результати за допомогою фільтрів</p></header>
       <div className={styles.searchRow}>
-        <CatalogSearch key={search} initialValue={search} disabled={pending} onSearch={(value) => navigate({ search: value || null })} onCategory={(category) => navigate({ category, search: null })} onBrowseCatalog={() => startTransition(() => router.push('/catalog', { scroll: false }))} />
+        <CatalogSearch key={search} initialValue={search} disabled={pending} onSearch={(value) => navigate({ search: value || null })} onCategory={(category) => navigate({ category, search: null })} onBrowseCatalog={() => pushCatalog(new URLSearchParams())} />
       </div>
       <div className={styles.layout}>
         <aside className={styles.sidebar} aria-label="Фільтри каталогу">
@@ -105,7 +129,7 @@ export function SearchAndFilters({ facets, categories, total, children }: { face
           <fieldset className={styles.group}><legend>Лікарська форма</legend>{dosageForms.map((form) => checkRow('form', form.value, `${form.label} (${facets.forms[form.value] || 0})`))}</fieldset>
           <fieldset className={styles.group}><legend>Наявність</legend>{checkRow('inStock', 'true', 'Лише в наявності')}</fieldset>
           <div className={styles.group}><h3>Ціна, грн</h3><PriceFilter key={`${min}:${max}`} min={Math.max(0, min)} max={max} bound={facets.maxPrice} disabled={pending} apply={(low, high) => navigate({ minPrice: low > 0 ? String(low) : null, maxPrice: high < facets.maxPrice || params.has('maxPrice') ? String(high) : null })} /></div>
-          <details className={styles.advanced}>
+          <details className={styles.advanced} open={['dosage', 'packSize', 'prescription', 'onSale', ...catalogSelects.map(item => item.key)].some(key => params.has(key)) || undefined}>
             <summary><SlidersHorizontal size={16} aria-hidden="true" /><span>Додаткові фільтри</span><ChevronDown className={styles.advancedChevron} size={16} aria-hidden="true" /></summary>
             <div className={styles.advancedContent}>
               <fieldset className={styles.group}><legend>Дозування</legend>{(facets.dosage.length ? facets.dosage : ['200 мг', '400 мг', '500 мг', '5 мг', '60 мг']).map((dose) => checkRow('dosage', dose, dose))}</fieldset>
@@ -118,7 +142,7 @@ export function SearchAndFilters({ facets, categories, total, children }: { face
         </aside>
 
         <div className={styles.main} aria-busy={pending}>
-          <div className={styles.resultsHeading}><div><h2>{search ? 'Результати пошуку' : chips.length ? 'Результати фільтрації' : 'Усі товари'}</h2><p role="status">{pending ? 'Оновлюємо результати…' : `Знайдено ${total} товарів`}</p></div><div className={styles.sort}><CatalogSelect id="catalog-sort" label="Сортування товарів" value={params.get('sort') || 'price_asc'} placeholder="Оберіть сортування" options={[{ value: 'price_asc', label: 'За ціною: спочатку дешевші' }, { value: 'price_desc', label: 'За ціною: спочатку дорожчі' }, { value: 'newest', label: 'Спочатку нові' }]} onChange={(value) => navigate({ sort: value })} disabled={pending} /></div></div>
+          <div className={styles.resultsHeading}><div><h2>{search ? 'Результати пошуку' : chips.length ? 'Результати фільтрації' : 'Усі товари'}</h2><p role="status">{pending ? 'Оновлюємо результати…' : `Знайдено ${total} товарів`}</p></div><div className={styles.sort}><CatalogSort value={params.get('sort') || 'price_asc'} onChange={(value) => navigate({ sort: value })} disabled={pending} /></div></div>
           {chips.length > 0 && <div className={styles.chips} aria-label="Застосовані фільтри">{chips.map(([key, value]) => {
             const display = key === 'form' ? dosageForms.find((form) => form.value === value)?.label || value : key === 'prescription' ? value === 'required' ? 'Рецептурні' : 'Без рецепта' : value;
             const label = key === 'inStock' || key === 'onSale' ? chipLabels[key] : `${chipLabels[key]}: ${display}${key.endsWith('Price') ? ' грн' : ''}`;

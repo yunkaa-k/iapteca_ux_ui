@@ -54,4 +54,27 @@
 .dialogDescription { font-size: 16px; font-weight: 500; line-height: 1.4; color: var(--iapteca-muted); margin: 0; }
 .dialogActions { display: flex; gap: 16px; }
 .dialogActions button { flex: 1; }
+.orderIdentity { display: flex; align-items: center; gap: 16px; }
+.orderIdentity h2 { font-size: 20px; line-height: 28px; font-weight: 600; }
+.orderDetails .products { gap: 0; }
+.orderDetails .product { min-height: 100px; }
+.orderDetails .explanation { padding: 24px; }
+.orderDetails .explanation strong { font-size: 14px; font-weight: 500; line-height: 20px; }
+.orderDetails .explanation p { color: var(--iapteca-muted); font-weight: 400; }
+.warning { color: var(--iapteca-warning-ink); background: var(--iapteca-warning-surface); }
+.success { color: var(--iapteca-success-ink); background: var(--iapteca-success-surface); }
+.error { color: var(--iapteca-error-ink); background: var(--iapteca-error-surface); }
+.info { color: var(--iapteca-primary); background: var(--secondary); }
+.orderTotals { display: flex; flex-direction: column; gap: 20px; padding-top: 24px; border-top: 1px solid var(--iapteca-border); }
+.orderTotals > div { display: flex; justify-content: space-between; gap: 24px; }
+.orderTotals > div:first-child { color: var(--iapteca-muted); font-size: 14px; line-height: 20px; }
+.orderTotals strong { font-size: 20px; line-height: 28px; font-weight: 600; }
+.receivingDetails { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 32px 24px; margin: 0; }
+.receivingDetails dt { margin-bottom: 8px; color: var(--iapteca-muted); font-size: 14px; line-height: 20px; }
+.receivingDetails dd { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.fullWidth, .contactRow { grid-column: 1 / -1; }
+.contactRow { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; padding-top: 24px; border-top: 1px solid var(--iapteca-border); }
+.actionError { margin: 0; font-size: 14px; color: var(--iapteca-error-ink); }
+.demoCaption { margin: 0; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; }
+.dialogActions button:disabled { opacity: .6; cursor: wait; }
 .orderCard:focus-visible, .primary:focus-visible, .secondary:focus-visible, .cancel:focus-visible, .confirm:focus-visible, .back:focus-visible, .textLink:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 3px; }

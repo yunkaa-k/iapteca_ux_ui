@@ -57,7 +57,12 @@
 .resultsHeading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .resultsHeading h2 { margin: 0; color: var(--iapteca-heading); font-size: 24px; line-height: 32px; font-weight: 600; }
 .resultsHeading p { margin: 4px 0 0; color: var(--iapteca-muted); font-size: 14px; line-height: 20px; }
-.sort { width: 290px; flex: 0 0 290px; }
+.sort { width: 295px; flex: 0 0 295px; }
+.sort .select { height: 44px; font-size: 13px; }
+.sortMenu { z-index: 60; width: var(--radix-select-trigger-width); padding: 4px; border: 1px solid var(--iapteca-border); border-radius: 8px; background: var(--iapteca-surface); box-shadow: 0 6px 10px rgb(18 41 69 / 12%); }
+.sortOption { display: flex; height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding-inline: 12px; font-size: 13px; color: var(--iapteca-text); cursor: pointer; outline: none; }
+.sortOption[data-highlighted] { background: var(--secondary); border-radius: 4px; }
+.sortOption img { flex-shrink: 0; }
 .products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { display: inline-flex; min-height: 40px; max-width: 100%; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--iapteca-border); border-radius: 10px; background: #ebf2ff; color: var(--iapteca-heading); font-size: 14px; line-height: 20px; text-align: left; cursor: pointer; overflow-wrap: anywhere; }

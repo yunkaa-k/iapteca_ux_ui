@@ -7,6 +7,27 @@ const user = { _id: 'owner', name: 'Олена', email: 'test@example.test', rol
 const view = () => render(<ProfileAccount user={user}><p>Existing orders</p></ProfileAccount>);
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
 describe('account design feedback', () => {
+  it('retains the verified current-password error while showing new-field errors and clears it when edited', async () => {
+    const request = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ fields: { currentPassword: 'Поточний пароль неправильний. Спробуйте ще раз.' } }) });
+    vi.stubGlobal('fetch', request); view();
+    fireEvent.click(screen.getByRole('button', { name: 'Змінити пароль' }));
+    const current = screen.getByLabelText(/^Поточний пароль/, { selector: 'input' });
+    const next = screen.getByLabelText(/^Новий пароль/, { selector: 'input' });
+    const confirm = screen.getByLabelText(/^Підтвердіть новий пароль/, { selector: 'input' });
+    fireEvent.change(current, { target: { value: 'Incorrect123' } });
+    fireEvent.change(next, { target: { value: 'NewPassword123' } });
+    fireEvent.change(confirm, { target: { value: 'NewPassword123' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Зберегти пароль' }));
+    await screen.findByRole('alert');
+    fireEvent.change(next, { target: { value: 'short' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Зберегти пароль' }));
+    expect(screen.getAllByRole('alert')).toHaveLength(3);
+    expect(request).toHaveBeenCalledOnce();
+    expect(next.getAttribute('aria-describedby')).toContain('new-password-help');
+    fireEvent.change(current, { target: { value: 'Corrected123' } });
+    expect(current).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.queryByText('Поточний пароль неправильний. Спробуйте ще раз.')).not.toBeInTheDocument();
+  });
   it('keeps account navigation in the URL when switching between profile and orders', () => {
     view();
     fireEvent.click(screen.getByRole('button', { name: 'Мої замовлення' }));

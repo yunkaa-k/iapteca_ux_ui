@@ -1,6 +1,6 @@
 import { config } from 'dotenv';
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import mongoose from 'mongoose';
 
 // Screens 164:42, the 11 current catalog cards. Prices/stock are demonstration data.
@@ -19,7 +19,8 @@ const products = [
   { name: 'Ібупрофен 400 мг №20', description: 'Ібупрофен · 400 мг · 20 табл.', price: 118, stock: 0, activeIngredient: 'Ібупрофен', dosage: '400 мг', packSize: 20, dosageForm: 'tablets', requiresPrescription: false, image: '/images/catalog/ibuprofen-400.jpeg' },
 ];
 const stableId = key => new mongoose.Types.ObjectId(createHash('sha256').update(`iapteca-ux-ui-demo-v1:${key}`).digest('hex').slice(0, 24));
-const categoryName = 'Препарати';
+const categoryByName = JSON.parse(readFileSync(new URL('./catalog-categories.json', import.meta.url), 'utf8'));
+const prescriptionByName = JSON.parse(readFileSync(new URL('./catalog-prescriptions.json', import.meta.url), 'utf8'));
 config({ path: '.env.local', quiet: true });
 let connection;
 let session;
@@ -42,7 +43,9 @@ try {
   step = 'atomic insert-only seed';
   await session.withTransaction(async () => {
     inserted = 0; skipped = 0;
-    if (!(await categories.findOne({ name: categoryName }, { session }))) {
+    for (const categoryName of new Set(products.map(product => categoryByName[product.name]))) {
+      if (!categoryName) throw new Error('MissingCategoryAssignment');
+      if (await categories.findOne({ name: categoryName }, { session })) continue;
       const _id = stableId(`category:${categoryName}`);
       const previous = await categories.findOne({ _id }, { session });
       if (previous) throw new Error('CategoryIdCollision');
@@ -55,7 +58,7 @@ try {
       const _id = stableId(`medication:${product.name}`);
       if (await medications.findOne({ _id }, { session })) throw new Error('MedicationIdCollision');
       const now = new Date();
-      await medications.insertOne({ _id, ...product, category: categoryName, manufacturer: 'Не вказано', isDeleted: false, createdAt: now, updatedAt: now }, { session });
+      await medications.insertOne({ _id, ...product, ...(prescriptionByName[product.name] ? { requiresPrescription: prescriptionByName[product.name].requiresPrescription } : {}), category: categoryByName[product.name], manufacturer: 'Не вказано', isDeleted: false, createdAt: now, updatedAt: now }, { session });
       inserted++;
     }
   });

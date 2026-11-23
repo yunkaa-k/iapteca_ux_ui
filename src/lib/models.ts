@@ -80,10 +80,11 @@ const orderSchema = new Schema<Order>({
       payment: { type: String, enum: ['on-receipt', 'online-after-confirmation', 'online'] },
       paymentMode: { type: String, enum: ['demo'] },
       demoPaymentStatus: { type: String, enum: ['paid', 'failed'] },
+      demoRefundStatus: { type: String, enum: ['pending'] },
     }, { _id: false }),
     required: false,
   },
-  status: { type: String, enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], default: 'PENDING' },
+  status: { type: String, enum: ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'SHIPPED', 'COMPLETED', 'CANCELLED'], default: 'PENDING' },
 }, { timestamps: true });
 
 export const UserModel = models.User || model<User>('User', userSchema);
