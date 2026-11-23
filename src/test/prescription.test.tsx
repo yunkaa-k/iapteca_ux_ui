@@ -51,7 +51,12 @@ describe('demo prescription verification', () => {
     expect(usePrescriptionStore.getState().entries[second._id].status).toBe('approved');
     store.attach(rx, 'replacement.jpg'); store.submit([rx, second]);
     vi.advanceTimersByTime(REVIEW_DELAY); store.settle();
-    expect(prescriptionsApproved([rx, second], usePrescriptionStore.getState().entries)).toBe(true);
+    const approvedEntries = usePrescriptionStore.getState().entries;
+    expect(prescriptionsApproved([rx, second], approvedEntries)).toBe(true);
+    const largerQuantity = { ...rx, quantity: 2 };
+    expect(prescriptionFor(largerQuantity, approvedEntries)).toBeUndefined();
+    expect(prescriptionFor(second, approvedEntries)?.status).toBe('approved');
+    expect(prescriptionsApproved([largerQuantity, second], approvedEntries)).toBe(false);
   });
   it('attaches, replaces and removes a file; unlocks checkout only after demo review', () => {
     vi.useFakeTimers();

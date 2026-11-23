@@ -3,6 +3,13 @@ export const DEMO_PHARMACIES = [
   { id: 'myronosytska', name: 'iApteca · Мироносицька', address: '', x: 459, y: 117 },
   { id: 'kultury', name: 'iApteca · Культури', address: '', x: 94, y: 117 },
 ] as const;
+
+// This basket appears in the pickup-unavailable design. The demo uses global stock.
+export function isDemoPickupUnavailable(items: readonly { kind?: 'bundle'; slug?: string; name?: string }[]) {
+  return items.some(item => item.kind === 'bundle' && item.slug === 'travel')
+    && items.some(item => item.kind !== 'bundle' && item.name === 'Нурофен 200 мг №24');
+}
+
 export interface CheckoutForm {
   name: string; phone: string; email: string;
   receiving: '' | 'pickup' | 'courier'; pharmacyId: string; city: string; address: string;

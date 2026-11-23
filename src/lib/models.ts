@@ -70,6 +70,7 @@ export const BundleModel = models.Bundle || model<Bundle>('Bundle', bundleSchema
 const orderSchema = new Schema<Order>({
   user: { type: String },
   guestPaymentTokenHash: { type: String, select: false },
+  submissionHash: { type: String, select: false },
   items: { type: [orderItemSchema], required: true },
   total: { type: Number, required: true, min: 0 },
   subtotal: { type: Number, min: 0 },

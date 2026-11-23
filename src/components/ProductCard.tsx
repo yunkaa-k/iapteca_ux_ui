@@ -48,14 +48,13 @@ export function ProductCard({ medication: m, variant = 'default', imageOverride,
 
     return (
       <article className={styles.featuredCard}>
-        <Link className={styles.featuredImageLink} href={productHref(m)} aria-label={`Переглянути ${m.kind === 'bundle' ? 'аптечку' : 'препарат'}: ${m.name}`}>
+        <Link className={styles.featuredImageLink} href={productHref(m)} aria-label={`Переглянути ${m.kind === 'bundle' ? 'аптечку' : 'препарат'}: ${m.name}${m.requiresPrescription === true ? '. Потрібен рецепт' : ''}`}>
           <span className={m.requiresPrescription === true ? styles.prescriptionMedia : undefined}>
             {m.requiresPrescription === true && <span className={styles.prescriptionBadge}><span aria-hidden="true" />Потрібен рецепт</span>}
             <span className={styles.featuredImage}>
               {image ? <Image src={image} alt="" fill sizes="(min-width: 1280px) 255px, 22vw" /> : null}
             </span>
           </span>
-          <span className={styles.srOnly}>Відкрити сторінку {m.kind === 'bundle' ? 'аптечки' : 'препарату'}</span>
         </Link>
 
         {favoriteButton}

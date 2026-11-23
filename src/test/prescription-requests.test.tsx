@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AccountOrders } from '@/components/AccountOrders';
 import { useCheckoutStore } from '@/lib/store/checkoutStore';
@@ -26,7 +26,7 @@ beforeEach(() => {
   useCartStore.setState({ items: [rx, other] });
   usePrescriptionStore.getState().clear();
   usePrescriptionRequestStore.setState({ requests: [] });
-  useCheckoutStore.setState({ drafts: {}, receipts: {} });
+  useCheckoutStore.setState({ drafts: {}, attempts: {}, receipts: {} });
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
@@ -41,14 +41,23 @@ describe('account prescription requests', () => {
     expect(request.entries[rx._id].fileName).toBe('clear.jpg');
     expect(usePrescriptionRequestStore.getState().requests).toHaveLength(1);
   });
-  it('keeps the attached recipe and asks a guest to sign in before saving', () => {
+  it('asks a guest to sign in and resumes the draft on return', () => {
     useAuthStore.setState({ user: null });
     usePrescriptionStore.getState().attach(rx, 'photo.jpg');
-    render(<PrescriptionVerification />);
+    const verification = render(<PrescriptionVerification />);
     fireEvent.click(screen.getByRole('button', { name: 'Надіслати на перевірку' }));
     expect(navigation.push).toHaveBeenCalledWith('/login?returnTo=%2Fcart%2Fprescription');
     expect(usePrescriptionStore.getState().entries[rx._id].fileName).toBe('photo.jpg');
     expect(usePrescriptionRequestStore.getState().requests).toHaveLength(0);
+    verification.unmount();
+    useAuthStore.setState({ user });
+    render(<PrescriptionVerification />);
+    expect(screen.getByText('photo.jpg')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Надіслати на перевірку' }));
+    expect(usePrescriptionRequestStore.getState().requests[0]).toMatchObject({
+      ownerId: user._id,
+      entries: { [rx._id]: { fileName: 'photo.jpg', status: 'reviewing' } },
+    });
   });
   it('updates status in My orders after leaving the upload screen', () => {
     vi.useFakeTimers();
@@ -96,10 +105,37 @@ describe('account prescription requests', () => {
     expect(usePrescriptionRequestStore.getState().cancel(id, user._id)).toBe(false);
     expect(useCartStore.getState().items).toEqual([rx, other]);
   });
-  it('checks out a saved request without losing unrelated current cart products', async () => {
-    const id = createRequest();
-    const store = usePrescriptionRequestStore.getState();
-    usePrescriptionRequestStore.setState({ requests: store.requests.map(r => ({ ...r, entries: { [rx._id]: { fileName: 'clear.jpg', quantity: 1, status: 'approved' } } })) });
+  it('checks out two independently verified prescriptions from a saved request and preserves unrelated cart products', async () => {
+    vi.useFakeTimers();
+    const secondRx = { ...rx, _id: 'rx-second', name: 'Препарат В' };
+    useCartStore.setState({ items: [rx, secondRx, other] });
+    const verification = render(<PrescriptionVerification />);
+    function attachFile(item: CartItem, fileName: string) {
+      fireEvent.change(screen.getByLabelText('Файл рецепта для ' + item.name), {
+        target: { files: [new File(['demo'], fileName, { type: 'image/jpeg' })] },
+      });
+    }
+    function expectStatus(item: CartItem, status: string) {
+      const card = screen.getByRole('heading', { name: item.name }).closest('article')!;
+      expect(within(card).getByRole('status')).toHaveTextContent(status);
+    }
+    attachFile(rx, 'blur.jpg');
+    attachFile(secondRx, 'clear.jpg');
+    fireEvent.click(screen.getByRole('button', { name: 'Надіслати на перевірку' }));
+    const [{ id }] = usePrescriptionRequestStore.getState().requests;
+    expect(navigation.replace).toHaveBeenCalledWith('/cart/prescription?request=' + id);
+    act(() => vi.advanceTimersByTime(REVIEW_DELAY));
+    expectStatus(rx, 'Потрібне нове фото');
+    expectStatus(secondRx, 'Рецепт підтверджено');
+    expect(screen.queryByRole('link', { name: 'Перейти до оформлення' })).not.toBeInTheDocument();
+    attachFile(rx, 'replacement.jpg');
+    fireEvent.click(screen.getByRole('button', { name: 'Надіслати на перевірку' }));
+    expectStatus(secondRx, 'Рецепт підтверджено');
+    act(() => vi.advanceTimersByTime(REVIEW_DELAY));
+    expectStatus(rx, 'Рецепт підтверджено');
+    expect(screen.getByRole('link', { name: 'Перейти до оформлення' })).toHaveAttribute('href', '/checkout?request=' + id);
+    verification.unmount();
+
     const unrelated = { ...other, _id: 'new-purchase', quantity: 2 };
     useCartStore.setState({ items: [unrelated] });
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ _id: 'new-order' }) });
@@ -111,7 +147,8 @@ describe('account prescription requests', () => {
     fireEvent.click(screen.getByRole('radio', { name: /^При отриманні/ }));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Підтвердити замовлення' })));
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.items.map((line: { medication: string }) => line.medication)).toEqual([rx._id, other._id]);
+    expect(body.items.map((line: { medication: string }) => line.medication)).toEqual([rx._id, secondRx._id, other._id]);
+    expect(fetchMock.mock.calls[0][1].body).not.toMatch(/clear\.jpg|replacement\.jpg/);
     expect(useCartStore.getState().items).toEqual([unrelated]);
     expect(usePrescriptionRequestStore.getState().requests[0].state).toBe('completed');
   });

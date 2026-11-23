@@ -7,4 +7,4 @@ export interface Bundle { _id: string; slug: string; name: string; description: 
 export interface BundleProduct extends Medication { kind: 'bundle'; slug: string; components: BundleComponent[]; compositionConfirmed: boolean; purpose: string; }
 export interface OrderItem { medication: string; quantity: number; price: number; kind?: 'bundle'; name?: string; description?: string; image?: string; slug?: string; components?: BundleComponent[]; }
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';
-export interface Order { _id: string; user?: string; guestPaymentTokenHash?: string; items: OrderItem[]; total: number; subtotal?: number; checkout?: import('./checkout').CheckoutDetails; status: OrderStatus; createdAt: string | Date; }
+export interface Order { _id: string; user?: string; guestPaymentTokenHash?: string; submissionHash?: string; items: OrderItem[]; total: number; subtotal?: number; checkout?: import('./checkout').CheckoutDetails; status: OrderStatus; createdAt: string | Date; }
