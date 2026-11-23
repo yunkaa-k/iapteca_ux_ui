@@ -9,4 +9,3 @@ export function OrderProducts({ items }: { items: CartItem[] }) {
     <div className={styles.productText}><strong>{item.name}</strong><p>{item.description}</p></div><span className={styles.quantity}>{item.quantity} шт.</span><strong className={styles.price}>{money(item.price * item.quantity)}</strong>
   </div>)}</div>;
 }
-
