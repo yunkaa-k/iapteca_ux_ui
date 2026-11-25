@@ -9,8 +9,8 @@ import { Slider } from 'radix-ui';
 import { SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { catalogQuery, catalogSelects, dosageForms, type CatalogFacets } from '@/lib/catalog';
+import { Select, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { catalogAgeLabel, catalogAgeOptions, catalogCategoryOrder, catalogDosages, catalogQuery, catalogResultCount, catalogSelects, dosageForms, type CatalogFacets } from '@/lib/catalog';
 import type { Category } from '@/lib/types';
 import styles from './Catalog.module.css';
 import { CatalogSearch } from './CatalogSearch';
@@ -20,7 +20,11 @@ function CatalogSelect({ id, label, value, placeholder, options, onChange, disab
   return (
     <Select value={value || '__all__'} onValueChange={(next) => onChange(next === '__all__' ? '' : next)} disabled={disabled}>
       <SelectTrigger id={id} className={styles.select} aria-label={label}><SelectValue placeholder={placeholder} /></SelectTrigger>
-      <SelectContent><SelectItem value="__all__">{placeholder}</SelectItem>{entries.filter((entry) => entry.value && entry.value !== '__all__').map((entry) => <SelectItem key={entry.value} value={entry.value}>{entry.label}</SelectItem>)}</SelectContent>
+      <SelectPrimitive.Portal><SelectPrimitive.Content position="popper" side="bottom" align="start" sideOffset={4} avoidCollisions={false} className={styles.filterMenu}>
+        <SelectPrimitive.Viewport className={styles.filterMenuViewport}>{[{ value: '__all__', label: placeholder }, ...entries.filter(entry => entry.value && entry.value !== '__all__')].map(entry => <SelectPrimitive.Item key={entry.value} value={entry.value} className={styles.filterOption}>
+          <SelectPrimitive.ItemText>{entry.label}</SelectPrimitive.ItemText>
+        </SelectPrimitive.Item>)}</SelectPrimitive.Viewport>
+      </SelectPrimitive.Content></SelectPrimitive.Portal>
     </Select>
   );
 }
@@ -82,6 +86,10 @@ export function SearchAndFilters({ facets, categories, total, children, queryStr
   const query = catalogQuery(new URLSearchParams(params.toString()));
   const min = query.minPrice ?? 0;
   const max = query.maxPrice ?? facets.maxPrice;
+  const orderedCategories = [...categories].sort((a, b) => {
+    const order = (name: string) => { const index = catalogCategoryOrder.findIndex(value => value === name); return index < 0 ? catalogCategoryOrder.length : index; };
+    return order(a.name) - order(b.name) || a.name.localeCompare(b.name, 'uk');
+  });
 
   function pushCatalog(next: URLSearchParams) {
     // Distinguish repeated filter navigations in Next 16's client route cache.
@@ -121,33 +129,33 @@ export function SearchAndFilters({ facets, categories, total, children, queryStr
   return (
     <div className={styles.page}>
       <nav className={styles.breadcrumbs} aria-label="Навігаційний шлях"><Link href="/">Головна</Link><span aria-hidden="true">/</span><span aria-current="page">Каталог</span></nav>
-      <header className={styles.heading}><h1>{search ? 'Результати пошуку' : 'Каталог товарів'}</h1><p>Знаходьте препарати та уточнюйте результати за допомогою фільтрів</p></header>
+      <header className={styles.heading}><h1>Каталог товарів</h1><p>Знаходьте препарати та уточнюйте результати за допомогою фільтрів</p></header>
       <div className={styles.searchRow}>
         <CatalogSearch key={search} initialValue={search} disabled={pending} onSearch={(value) => navigate({ search: value || null })} onCategory={(category) => navigate({ category, search: null })} onBrowseCatalog={() => pushCatalog(new URLSearchParams())} />
       </div>
       <div className={styles.layout}>
         <aside className={styles.sidebar} aria-label="Фільтри каталогу">
           <div className={styles.filterHeading}><h2>Фільтри</h2><button className={styles.textButton} type="button" disabled={pending || !chips.length} onClick={resetFilters}>Скинути</button></div>
-          <div className={styles.group}><label htmlFor="catalog-category">Категорія</label><CatalogSelect id="catalog-category" label="Категорія" value={params.get('category') || ''} placeholder="Усі категорії" options={categories.map((category) => ({ value: category.name, label: category.name }))} onChange={(value) => navigate({ category: value })} disabled={pending} /></div>
+          <div className={styles.group}><label htmlFor="catalog-category">Категорія</label><CatalogSelect id="catalog-category" label="Категорія" value={params.get('category') || ''} placeholder="Усі категорії" options={orderedCategories.map((category) => ({ value: category.name, label: category.name }))} onChange={(value) => navigate({ category: value })} disabled={pending} /></div>
           <fieldset className={styles.group}><legend>Лікарська форма</legend>{dosageForms.map((form) => checkRow('form', form.value, `${form.label} (${facets.forms[form.value] || 0})`))}</fieldset>
           <fieldset className={styles.group}><legend>Наявність</legend>{checkRow('inStock', 'true', 'Лише в наявності')}</fieldset>
           <div className={styles.group}><h3>Ціна, грн</h3><PriceFilter key={`${min}:${max}`} min={Math.max(0, min)} max={max} bound={facets.maxPrice} disabled={pending} apply={(low, high) => navigate({ minPrice: low > 0 ? String(low) : null, maxPrice: high < facets.maxPrice || params.has('maxPrice') ? String(high) : null })} /></div>
           <details className={styles.advanced} open={advancedOpen} onToggle={event => setAdvancedOpen(event.currentTarget.open)}>
             <summary><SlidersHorizontal size={16} aria-hidden="true" /><span>Додаткові фільтри</span><ChevronDown className={styles.advancedChevron} size={16} aria-hidden="true" /></summary>
             <div className={styles.advancedContent}>
-              <fieldset className={styles.group}><legend>Дозування</legend>{(facets.dosage.length ? facets.dosage : ['200 мг', '400 мг', '500 мг', '5 мг', '60 мг']).map((dose) => checkRow('dosage', dose, dose))}</fieldset>
+              <fieldset className={styles.group}><legend>Дозування</legend>{catalogDosages.map((dose) => checkRow('dosage', dose, dose))}</fieldset>
               <fieldset className={styles.group}><legend>Кількість в упаковці</legend>{(facets.packSize.length ? facets.packSize : ['12', '20', '24', '10', '30', '100']).map((pack) => checkRow('packSize', pack, `№${pack}`))}</fieldset>
               <fieldset className={styles.group}><legend>Рецептурність</legend>{checkRow('prescription', 'not-required', 'Без рецепта')}{checkRow('prescription', 'required', 'Рецептурні')}</fieldset>
-              {catalogSelects.map(({ key, label, placeholder }) => <div className={styles.group} key={key}><label htmlFor={`filter-${key}`}>{label}</label><CatalogSelect id={`filter-${key}`} label={label} placeholder={placeholder} value={params.get(key) || ''} options={facets[key].map((value) => ({ value, label: value }))} onChange={(value) => navigate({ [key]: value })} disabled={pending} />{key === 'ageGroup' && <p className={styles.hint}>Враховуйте також обмеження за масою тіла з інструкції.</p>}</div>)}
+              {catalogSelects.map(({ key, label, placeholder }) => <div className={styles.group} key={key}><label htmlFor={`filter-${key}`}>{label}</label><CatalogSelect id={`filter-${key}`} label={label} placeholder={placeholder} value={key === 'ageGroup' ? catalogAgeLabel(params.get(key) || '') || params.get(key) || '' : params.get(key) || ''} options={(key === 'ageGroup' ? catalogAgeOptions(facets[key]) : facets[key]).map((value) => ({ value, label: value }))} onChange={(value) => navigate({ [key]: value })} disabled={pending} />{key === 'ageGroup' && <p className={styles.hint}>Точні вікові та вагові обмеження дивіться в інструкції.</p>}</div>)}
               <fieldset className={styles.group}><legend>Пропозиції</legend>{checkRow('onSale', 'true', 'Акційні товари')}</fieldset>
             </div>
           </details>
         </aside>
 
         <div className={styles.main} aria-busy={pending}>
-          <div className={styles.resultsHeading}><div><h2>{search ? 'Результати пошуку' : chips.length ? 'Результати фільтрації' : 'Усі товари'}</h2><p role="status">{pending ? 'Оновлюємо результати…' : `Знайдено ${total} товарів`}</p></div><div className={styles.sort}><CatalogSort value={params.get('sort') || 'price_asc'} onChange={(value) => navigate({ sort: value })} disabled={pending} /></div></div>
+          <div className={styles.resultsHeading}><div><h2>{search ? 'Результати пошуку' : chips.length ? 'Результати фільтрації' : 'Усі товари'}</h2><p role="status">{pending ? 'Оновлюємо результати…' : catalogResultCount(total)}</p></div><div className={styles.sort}><CatalogSort value={params.get('sort') || 'price_asc'} onChange={(value) => navigate({ sort: value })} disabled={pending} /></div></div>
           {chips.length > 0 && <div className={styles.chips} aria-label="Застосовані фільтри">{chips.map(([key, value]) => {
-            const display = key === 'form' ? dosageForms.find((form) => form.value === value)?.label || value : key === 'prescription' ? value === 'required' ? 'Рецептурні' : 'Без рецепта' : value;
+            const display = key === 'form' ? dosageForms.find((form) => form.value === value)?.label || value : key === 'prescription' ? value === 'required' ? 'Рецептурні' : 'Без рецепта' : key === 'ageGroup' ? catalogAgeLabel(value) || value : value;
             const label = key === 'inStock' || key === 'onSale' ? chipLabels[key] : `${chipLabels[key]}: ${display}${key.endsWith('Price') ? ' грн' : ''}`;
             return <button className={styles.chip} key={`${key}-${value}`} type="button" disabled={pending} aria-label={`Прибрати фільтр: ${label}`} onClick={() => toggle(key, value, false)}>{label}<span aria-hidden="true">×</span></button>;
           })}</div>}

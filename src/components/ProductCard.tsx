@@ -13,16 +13,18 @@ import type { ReactNode } from 'react';
 import { useFavoritesStore } from '@/lib/store/favoritesStore';
 import { useHydrated } from '@/lib/useHydrated';
 import { notifyCartAdded, notifyFavorite } from './ProductFeedback';
+import { unitPrice } from '@/lib/product';
 
 type ProductCardProps = {
   medication: Medication;
-  variant?: 'default' | 'featured';
+  variant?: 'default' | 'featured' | 'alternative';
+  referenceDosage?: string;
   imageOverride?: string;
   summary?: string;
   footerAction?: ReactNode;
 };
 
-export function ProductCard({ medication: m, variant = 'default', imageOverride, summary, footerAction }: ProductCardProps) {
+export function ProductCard({ medication: m, variant = 'default', imageOverride, summary, footerAction, referenceDosage }: ProductCardProps) {
   const addItem = useCartStore(s => s.addItem);
   const hydrated = useHydrated();
   const quantityInCart = useCartStore(state => state.items.find(item => item._id === m._id)?.quantity || 0);
@@ -43,30 +45,36 @@ export function ProductCard({ medication: m, variant = 'default', imageOverride,
   );
   const stock = m.stock <= 0 ? { l: 'Немає', v: 'destructive' } : m.stock < 5 ? { l: 'Закінчується', v: 'outline' } : { l: 'В наявності', v: 'secondary' };
 
-  if (variant === 'featured') {
+  if (variant === 'featured' || variant === 'alternative') {
     const image = imageOverride || m.image;
+    const alternative = variant === 'alternative';
+    const doseKnown = !!m.dosage && !!referenceDosage;
+    const sameDose = doseKnown && m.dosage === referenceDosage;
 
     return (
-      <article className={styles.featuredCard}>
+      <article className={`${styles.featuredCard} ${alternative ? styles.alternativeCard : ''}`}>
         <Link className={styles.featuredImageLink} href={productHref(m)} aria-label={`Переглянути ${m.kind === 'bundle' ? 'аптечку' : 'препарат'}: ${m.name}${m.requiresPrescription === true ? '. Потрібен рецепт' : ''}`}>
-          <span className={m.requiresPrescription === true ? styles.prescriptionMedia : undefined}>
-            {m.requiresPrescription === true && <span className={styles.prescriptionBadge}><span aria-hidden="true" />Потрібен рецепт</span>}
+          <span className={!alternative && m.requiresPrescription === true ? styles.prescriptionMedia : undefined}>
+            {!alternative && m.requiresPrescription === true && <span className={styles.prescriptionBadge}><span aria-hidden="true" />Потрібен рецепт</span>}
             <span className={styles.featuredImage}>
               {image ? <Image src={image} alt="" fill sizes="(min-width: 1280px) 255px, 22vw" /> : null}
             </span>
           </span>
         </Link>
 
-        {favoriteButton}
+        {!alternative && favoriteButton}
 
+        <div className={styles.featuredDetails}>
         <Link className={styles.featuredTitle} href={productHref(m)} title={m.name}>{m.name}</Link>
         <p className={styles.featuredSummary}>{summary || m.description}</p>
+        {alternative && <p className={`${styles.doseNote} ${doseKnown ? sameDose ? styles.sameDose : styles.differentDose : ''}`}>{doseKnown ? `${sameDose ? 'Та сама доза' : 'Інше дозування'} · ${m.dosage}` : 'Дозування потребує уточнення'}</p>}
         <p className={`${styles.featuredAvailability} ${m.stock <= 0 ? styles.featuredOutOfStock : ''}`}>
           <Image src={m.stock > 0 ? '/images/home/availability-dot.svg' : '/images/home/availability-error-dot.svg'} alt="" width={8} height={8} aria-hidden="true" />
           {m.stock > 0 ? 'В наявності' : 'Немає в наявності'}
         </p>
+        </div>
         <div className={styles.featuredFooter}>
-          <strong>{m.price} грн</strong>
+          <div className={styles.featuredPrice}><strong>{m.price} грн</strong>{alternative && <span>{m.packSize && m.packSize > 0 ? unitPrice(m, 2) : 'Ціну за одиницю не вказано'}</span>}</div>
           {footerAction || <Button
             className={styles.featuredCartButton}
             type="button"

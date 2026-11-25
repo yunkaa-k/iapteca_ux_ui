@@ -133,7 +133,7 @@ describe('checkout orders API', () => {
     expect(mocks.findOrder).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
   });
-  it('rolls back pickup for the demo combination and permits courier delivery', async () => {
+  it('permits both pickup and courier for the same mixed basket when stock is available', async () => {
     mocks.findBundle.mockReturnValue({
       session: async () => ({
         slug: 'travel', price: 249, components: [{ medication: 'kit-component', quantity: 1 }],
@@ -144,15 +144,14 @@ describe('checkout orders API', () => {
       : { stock: 4 });
     const items = [{ medication: 'med', quantity: 1 }, { medication: 'travel-kit', kind: 'bundle', quantity: 1 }];
     const pickup = await POST(request({ items, checkout: { ...checkout, receiving: 'pickup', pharmacyId: 'center' } }));
-    expect(pickup.status).toBe(400);
-    expect((await pickup.json()).error).toContain('Немає аптеки з усіма товарами');
-    expect(mocks.session.abortTransaction).toHaveBeenCalledOnce();
-    expect(mocks.session.commitTransaction).not.toHaveBeenCalled();
-    expect(mocks.create).not.toHaveBeenCalled();
+    expect(pickup.status).toBe(200);
+    expect(await pickup.json()).toMatchObject({ subtotal: 394, total: 394, checkout: { delivery: { method: 'pickup', pharmacyId: 'center' } } });
+    expect(mocks.session.abortTransaction).not.toHaveBeenCalled();
+    expect(mocks.session.commitTransaction).toHaveBeenCalledOnce();
 
     const courier = await POST(request({ items }));
     expect(courier.status).toBe(200);
     expect(await courier.json()).toMatchObject({ subtotal: 394, total: 453, checkout: { delivery: { method: 'courier' } } });
-    expect(mocks.session.commitTransaction).toHaveBeenCalledOnce();
+    expect(mocks.session.commitTransaction).toHaveBeenCalledTimes(2);
   });
 });

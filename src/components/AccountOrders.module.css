@@ -5,6 +5,11 @@
 .orderCard { display: flex; flex-direction: column; gap: 20px; padding: 24px; border-radius: 16px; border: 1px solid var(--iapteca-border); background: var(--iapteca-surface); color: var(--iapteca-heading); text-decoration: none; }
 .heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
 .heading > div { display: flex; flex-direction: column; gap: 8px; }
+.orderCard .heading { align-items: flex-start; }
+.orderCard .heading > div { gap: 6px; }
+.orderCard .heading p, .orderCard .cardText p { line-height: 19px; font-weight: 400; }
+.orderCard .cardText strong { line-height: 22px; }
+.orderCard .cardSummary > strong { line-height: 27px; font-weight: 700; }
 .badge { border-radius: 20px; padding: 6px 12px; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
 .reviewing { color: var(--iapteca-warning-ink); background: var(--iapteca-warning-surface); }
 .approved { color: var(--iapteca-success-ink); background: var(--iapteca-success-surface); }
@@ -17,9 +22,13 @@
 .thumbnails { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .thumbnails > div { position: relative; width: 80px; height: 60px; }
 .thumbnails img { object-fit: contain; }
-.thumbnails > span { padding: 12px; color: var(--iapteca-primary); background: var(--secondary); border-radius: 10px; }
+.thumbnails > span { display: grid; place-items: center; width: 48px; height: 48px; color: var(--iapteca-primary); background: var(--secondary); border-radius: 10px; font-size: 16px; line-height: 22px; font-weight: 600; }
 .textLink, .back { display: inline-flex; align-items: center; gap: 8px; color: var(--iapteca-primary); cursor: pointer; }
 .textLink { font-size: 16px; font-weight: 600; line-height: 22px; }
+.cardActions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.cancelLink { padding: 0; background: transparent; border: 0; color: var(--iapteca-error-ink); font-size: 16px; font-weight: 600; line-height: 22px; cursor: pointer; }
+.cancelLink:hover { text-decoration: underline; }
+.cancelLink:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 3px; }
 .back { font-size: 14px; font-weight: 500; line-height: 20px; }
 .explanation { padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
 .explanation strong { font-size: 16px; font-weight: 600; line-height: 22px; }

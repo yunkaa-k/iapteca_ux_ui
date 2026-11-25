@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import type { Order } from '@/lib/types';
 import styles from './AccountOrders.module.css';
 import { OrderProducts as ProductRows } from './OrderProducts';
 import { OrderDetails } from './OrderDetails';
+import { CancelOrderDialog } from './CancelOrderDialog';
 import { orderDisplay } from '@/lib/order-display';
 import { orderNumber } from '@/lib/checkout';
 
@@ -73,13 +74,26 @@ export function AccountOrders({ ownerId, orders, requestId, orderId }: { ownerId
   return <>
     {active.length > 0 && <section className={styles.requests} aria-label="Заявки на замовлення"><h2>Заявки на замовлення · {active.length}</h2><p>Тут можна перевірити рецепт і продовжити оформлення. Інші покупки можна робити окремо.</p>{active.map(r => <RequestCard request={r} key={r.id} />)}</section>}
     <h2 className={styles.sectionHeading}>Оформлені замовлення · {orders.length}</h2>
-    {orders.length === 0 ? <section className={styles.panel}><h2>Замовлень ще немає</h2><p>Оформлені замовлення з’являться тут.</p><Link className={styles.secondary} href="/catalog">Перейти до каталогу</Link></section> : orders.map(order => <section className={styles.orderCard} key={order._id}>
-      <div className={styles.heading}><div><h2>Замовлення № {orderNumber(order._id, order.createdAt)}</h2><p>{date(order.createdAt)}</p></div><span className={`${styles.badge} ${styles[orderDisplay(order).badgeState]}`}>{orderDisplay(order).badge}</span></div>
-      {order.items.length > 0 && order.items.every(item => item.name.startsWith('[ДЕМО]')) && <p className={styles.demoCaption}>Демонстраційне замовлення</p>}
-      <div className={styles.cardSummary}><Thumbnails items={order.items} /><span>{order.items.length} товарів</span><strong>{money(order.total)}</strong></div>
-      <Link className={styles.textLink} href={'/profile?tab=orders&order=' + encodeURIComponent(order._id)}>Переглянути замовлення</Link>
-    </section>)}
+    {orders.length === 0 ? <section className={styles.panel}><h2>Замовлень ще немає</h2><p>Оформлені замовлення з’являться тут.</p><Link className={styles.secondary} href="/catalog">Перейти до каталогу</Link></section> : orders.map(order => <OrderCard order={order} key={JSON.stringify([order._id, order.status, order.checkout])} />)}
   </>;
+}
+
+const productPlural = new Intl.PluralRules('uk-UA');
+const productCount = (count: number) => `${count} ${productPlural.select(count) === 'one' ? 'товар' : productPlural.select(count) === 'few' ? 'товари' : 'товарів'}`;
+
+function OrderCard({ order: initialOrder }: { order: AccountOrder }) {
+  const [override, setOverride] = useState<AccountOrder>();
+  const order = override || initialOrder;
+  const display = orderDisplay(order);
+  const receiving = order.checkout?.delivery.method === 'courier' ? 'Кур’єрська доставка' : order.checkout?.delivery.method === 'pickup' ? 'Самовивіз з аптеки' : 'Спосіб отримання не вказано';
+  return <section className={styles.orderCard} aria-label={`Замовлення № ${orderNumber(order._id, order.createdAt)}`}>
+    <div className={styles.heading}><div><h2>№ {orderNumber(order._id, order.createdAt)}</h2><p>{date(order.createdAt)}</p></div><span className={`${styles.badge} ${styles[display.badgeState]}`} role="status">{display.badge}</span></div>
+    <div className={styles.cardSummary}><Thumbnails items={order.items} /><div className={styles.cardText}><strong>{productCount(order.items.length)} · {receiving}</strong><p>{display.payment === 'При отриманні' ? 'Оплата при отриманні' : display.payment}</p></div><strong>{money(order.total)}</strong></div>
+    <div className={styles.cardActions}>
+      <Link className={styles.textLink} href={'/profile?tab=orders&order=' + encodeURIComponent(order._id)}>Переглянути замовлення<Image src="/images/account/arrow-right.svg" alt="" width={16} height={16} /></Link>
+      <CancelOrderDialog order={order} onCancelled={setOverride} className={styles.cancelLink} />
+    </div>
+  </section>;
 }
 
 function Thumbnails({ items }: { items: CartItem[] }) {
@@ -89,7 +103,7 @@ function RequestCard({ request }: { request: PrescriptionRequest }) {
   const status = requestStatus(request);
   return <Link href={`/profile?tab=orders&request=${request.id}`} className={styles.orderCard}>
     <div className={styles.heading}><div><h3>Заявка № {request.number}</h3><p>{date(request.createdAt)}</p></div><span className={`${styles.badge} ${styles[status]}`}>{labels[status]}</span></div>
-    <div className={styles.cardSummary}><Thumbnails items={request.items} /><div className={styles.cardText}><strong>{request.items.length} товари · Оформлення не завершено</strong><p>{status === 'approved' ? 'Рецепт підтверджено. Можна продовжити оформлення.' : status === 'needs-new-photo' ? 'Потрібно замінити фото рецепта.' : 'Рецепт надіслано на перевірку.'}</p></div><strong>{money(total(request.items))}</strong></div>
+    <div className={styles.cardSummary}><Thumbnails items={request.items} /><div className={styles.cardText}><strong>{productCount(request.items.length)} · Оформлення не завершено</strong><p>{status === 'approved' ? 'Рецепт підтверджено. Можна продовжити оформлення.' : status === 'needs-new-photo' ? 'Потрібно замінити фото рецепта.' : 'Рецепт надіслано на перевірку.'}</p></div><strong>{money(total(request.items))}</strong></div>
     <span className={styles.textLink}>Переглянути статус<Image src="/images/account/arrow-right.svg" alt="" width={16} height={16} /></span>
   </Link>;
 }

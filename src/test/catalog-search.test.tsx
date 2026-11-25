@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CatalogSearch } from '@/components/CatalogSearch';
 import { useSearchHistoryStore } from '@/lib/store/searchHistoryStore';
+import { useCartStore } from '@/lib/store/cartStore';
 
 const actions = { onSearch: vi.fn(), onCategory: vi.fn(), onBrowseCatalog: vi.fn() };
 const input = () => screen.getByRole('combobox', { name: 'Назва або діюча речовина' });
@@ -10,11 +11,37 @@ const productData = (name: string) => ({ products: [{ _id: 'p1', name, price: 14
 
 beforeEach(() => {
   vi.clearAllMocks(); localStorage.clear(); useSearchHistoryStore.setState({ queries: [] });
+  useCartStore.setState({ items: [] });
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ products: [], ingredients: [], correction: null })));
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 describe('catalog suggestions', () => {
+  it('shows design queries and descriptions and adds to the cart without closing suggestions or navigating', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(response({ products: [{ _id: 'p1', name: 'Парацетамол 500 мг №10', description: '500 мг · 10 табл.', price: 45, stock: 1, dosage: '500 мг', packSize: 10, activeIngredient: 'Парацетамол', requiresPrescription: false }], ingredients: ['Парацетамол'], correction: null }) as Response);
+    render(<CatalogSearch initialValue="" disabled={false} {...actions} />);
+    fireEvent.change(input(), { target: { value: 'пара' } });
+    expect(await screen.findByRole('button', { name: 'парацетамол 500 мг' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'парацетамол №10' })).toBeVisible();
+    expect(screen.getByText('500 мг · 10 табл.')).toBeVisible();
+    expect(screen.getByText('Усі препарати з цією діючою речовиною')).toBeVisible();
+    const add = screen.getByRole('button', { name: 'Додати Парацетамол 500 мг №10 до кошика' });
+    fireEvent.click(add);
+    expect(useCartStore.getState().items).toEqual([expect.objectContaining({ _id: 'p1', quantity: 1, requiresPrescription: false, price: 45 })]);
+    expect(add).toBeDisabled();
+    expect(screen.getByRole('dialog', { name: 'Підказки пошуку' })).toBeVisible();
+    expect(actions.onSearch).not.toHaveBeenCalled();
+  });
+
+  it('does not allow adding unavailable suggestions', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(response({ products: [{ _id: 'p1', name: 'Unavailable', price: 45, stock: 0 }], ingredients: [], correction: null }) as Response);
+    render(<CatalogSearch initialValue="" disabled={false} {...actions} />);
+    fireEvent.change(input(), { target: { value: 'unavailable' } });
+    const add = await screen.findByRole('button', { name: 'Додати Unavailable до кошика' });
+    expect(add).toBeDisabled();
+    expect(screen.getByText('Немає в наявності')).toBeVisible();
+    expect(useCartStore.getState().items).toEqual([]);
+  });
   it('opens recent queries without a network request and supports arrows/Escape', () => {
     useSearchHistoryStore.getState().remember('recent');
     render(<CatalogSearch initialValue="" disabled={false} {...actions} />);

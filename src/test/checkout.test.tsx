@@ -107,13 +107,25 @@ describe('checkout and receipt', () => {
     expect(keys.every(key => key)).toBe(true);
     expect(new Set(keys).size).toBe(2);
   });
-  it('offers courier delivery when no pharmacy can fulfill the combined demo basket', () => {
-    vi.stubGlobal('fetch', vi.fn());
+  it('allows pickup for a mixed basket without depending on product names', () => {
     useCartStore.setState({ items: [
       { ...item, name: 'Нурофен 200 мг №24', price: 145 },
       { ...item, _id: 'travel-kit', kind: 'bundle', slug: 'travel', name: 'Аптечка «Для подорожі»', price: 249 },
     ] });
     render(<CheckoutContent />);
+    pickup();
+    expect(screen.getByRole('button', { name: 'Обрати iApteca · Центр' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('heading', { name: 'Немає аптеки з усіма товарами' })).not.toBeInTheDocument();
+    expect(screen.getByRole('complementary', { name: 'Ваше замовлення' })).toHaveTextContent('394 грн');
+    expect(screen.getByRole('button', { name: 'Підтвердити замовлення' })).toBeEnabled();
+  });
+  it('offers courier delivery in the explicit pickup-unavailable preview without losing contact details', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    useCartStore.setState({ items: [
+      { ...item, name: 'Нурофен 200 мг №24', price: 145 },
+      { ...item, _id: 'travel-kit', kind: 'bundle', slug: 'travel', name: 'Аптечка «Для подорожі»', price: 249 },
+    ] });
+    render(<CheckoutContent pickupUnavailablePreview />);
     contacts();
     fireEvent.click(screen.getByRole('radio', { name: /^Самовивіз з аптеки/ }));
     expect(screen.getByRole('heading', { name: 'Немає аптеки з усіма товарами' })).toBeInTheDocument();
@@ -125,6 +137,9 @@ describe('checkout and receipt', () => {
     expect(screen.getByLabelText('Місто *')).toHaveFocus();
     expect(screen.getByLabelText('Ім’я та прізвище *')).toHaveValue('Тестовий покупець');
     expect(screen.getByRole('complementary', { name: 'Ваше замовлення' })).toHaveTextContent('453 грн');
+    fireEvent.click(screen.getByRole('radio', { name: /^Самовивіз з аптеки/ }));
+    expect(screen.getByRole('heading', { name: 'Немає аптеки з усіма товарами' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Підтвердити замовлення' })).toBeDisabled();
   });
   it('does not invent order data when receipt storage is missing', () => {
     render(<OrderResult orderId="unknown" />);

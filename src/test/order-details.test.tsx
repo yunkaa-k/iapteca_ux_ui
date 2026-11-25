@@ -8,10 +8,55 @@ vi.mock('@/lib/useHydrated', () => ({ useHydrated: () => true }));
 const order: AccountOrder = { _id: 'a'.repeat(24), user: 'owner', status: 'PENDING', createdAt: '2026-11-23T12:00:00Z', total: 249, items: [{ _id: 'kit', kind: 'bundle', name: 'Тестова аптечка', description: 'Демонстраційний набір', category: 'Тест', manufacturer: 'Тест', price: 249, stock: 2, quantity: 1 }], checkout: { contact: { name: 'Тестовий покупець', phone: '+380670000000' }, delivery: { method: 'pickup', pharmacyName: 'Тестова аптека', address: 'Тестова, 1', fee: 0 }, payment: 'on-receipt' } };
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
 describe('order details', () => {
-  it('labels local demo orders without labeling ordinary purchases', () => {
+  it('shows receiving and payment on list cards using saved order data', () => {
+    const courier: AccountOrder = { ...order, _id: 'b'.repeat(24), status: 'COMPLETED', checkout: { ...order.checkout!, delivery: { method: 'courier', address: 'Тестова, 1', fee: 59 } } };
+    render(<AccountOrders ownerId="owner" orders={[order, courier]} />);
+    expect(screen.getByText('1 товар · Самовивіз з аптеки')).toBeInTheDocument();
+    expect(screen.getByText('1 товар · Кур’єрська доставка')).toBeInTheDocument();
+    expect(screen.getByText('Оплата при отриманні')).toBeInTheDocument();
+    expect(screen.getByText('Оплачено при отриманні')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Скасувати замовлення' })).toHaveLength(1);
+  });
+  it('does not invent receiving or payment data for legacy list cards', () => {
+    render(<AccountOrders ownerId="owner" orders={[{ ...order, checkout: undefined }]} />);
+    expect(screen.getByText('1 товар · Спосіб отримання не вказано')).toBeInTheDocument();
+    expect(screen.getByText('Не вказано')).toBeInTheDocument();
+  });
+  it.each(['SHIPPED', 'COMPLETED', 'CANCELLED'] as const)('hides cancellation on %s list cards', status => {
+    render(<AccountOrders ownerId="owner" orders={[{ ...order, status }]} />);
+    expect(screen.queryByRole('button', { name: 'Скасувати замовлення' })).not.toBeInTheDocument();
+  });
+  it('cancels from the list only after confirmation and immediately shows the saved refund state', async () => {
+    const paid: AccountOrder = { ...order, checkout: { ...order.checkout!, payment: 'online', paymentMode: 'demo', demoPaymentStatus: 'paid' } };
+    const request = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ status: 'CANCELLED', checkout: { ...paid.checkout, demoRefundStatus: 'pending' } }) });
+    vi.stubGlobal('fetch', request);
+    render(<AccountOrders ownerId="owner" orders={[paid]} />);
+    expect(screen.getByText('Оплачено онлайн')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати замовлення' }));
+    expect(request).not.toHaveBeenCalled();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Залишити замовлення' }));
+    expect(request).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати замовлення' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Скасувати замовлення' }));
+    expect(await screen.findByText('Повернення в обробці')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Скасовано');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Скасувати замовлення' })).not.toBeInTheDocument();
+    expect(request).toHaveBeenCalledExactlyOnceWith('/api/orders/' + order._id, expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ status: 'CANCELLED' }) }));
+    expect(navigation.refresh).toHaveBeenCalledOnce();
+  });
+  it('updates the list when refreshed order data arrives', () => {
+    const view = render(<AccountOrders ownerId="owner" orders={[order]} />);
+    expect(screen.getByRole('button', { name: 'Скасувати замовлення' })).toBeInTheDocument();
+    view.rerender(<AccountOrders ownerId="owner" orders={[{ ...order, status: 'SHIPPED', checkout: { ...order.checkout!, delivery: { method: 'courier', address: 'Тестова, 1', fee: 59 } } }]} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Передано кур’єру');
+    expect(screen.getByText('1 товар · Кур’єрська доставка')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Скасувати замовлення' })).not.toBeInTheDocument();
+  });
+  it('keeps fixture metadata out of the product card layout', () => {
     const demo = { ...order, _id: 'b'.repeat(24), items: [{ ...order.items[0], name: '[ДЕМО] В обробці' }] };
     render(<AccountOrders ownerId="owner" orders={[order, demo]} />);
-    expect(screen.getAllByText('Демонстраційне замовлення')).toHaveLength(1);
+    expect(screen.queryByText('Демонстраційне замовлення')).not.toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Переглянути замовлення' })).toHaveLength(2);
   });
   it('links list cards to owned details and handles an inaccessible ID without falling back', () => {

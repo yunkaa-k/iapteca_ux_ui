@@ -4,7 +4,7 @@
 .heading { margin-bottom: 24px; }
 .heading h1 { margin: 0 0 8px; font-size: 32px; line-height: 40px; font-weight: 700; color: var(--iapteca-heading); }
 .heading p { margin: 0; color: var(--iapteca-text-secondary); font-size: 16px; line-height: 24px; }
-.searchRow { width: min(925px, 100%); margin-bottom: 24px; }
+.searchRow { width: 100%; margin-bottom: 24px; }
 .layout { display: grid; grid-template-columns: 295px minmax(0, 1fr); gap: 20px; align-items: start; }
 .sidebar { display: flex; flex-direction: column; gap: 16px; padding: 24px; border: 1px solid var(--iapteca-border); border-radius: 16px; background: var(--iapteca-surface); }
 .filterHeading { display: flex; min-height: 40px; justify-content: space-between; align-items: center; gap: 12px; }
@@ -17,6 +17,11 @@
 .group legend { margin-bottom: 8px; font-weight: 600; color: var(--iapteca-text); }
 .group:has(legend) { display: block; }
 .select { width: 100%; min-height: 40px; border: 1px solid var(--iapteca-border); border-radius: 8px; background: #fff; color: var(--iapteca-text); box-shadow: none; font-size: 14px; }
+.filterMenu { z-index: 60; width: var(--radix-select-trigger-width); max-height: var(--radix-select-content-available-height); padding: 4px; border: 1px solid var(--iapteca-border); border-radius: 8px; background: var(--iapteca-surface); box-shadow: 0 6px 20px rgb(18 41 69 / 12%); }
+.filterMenuViewport { max-height: min(300px, calc(var(--radix-select-content-available-height) - 10px)); overflow-y: auto; }
+.filterOption { display: flex; min-height: 36px; align-items: center; padding: 8px; border-radius: 4px; color: var(--iapteca-text); font-size: 13px; line-height: 20px; font-weight: 400; cursor: pointer; outline: none; overflow-wrap: anywhere; }
+.filterOption[data-highlighted] { background: var(--secondary); }
+.filterOption[data-disabled] { opacity: .5; pointer-events: none; }
 .checkRow { display: flex; min-height: 36px; align-items: center; gap: 10px; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--iapteca-text); cursor: pointer; }
 .checkRow > button { flex: 0 0 20px; width: 20px; height: 20px; border-radius: 4px; }
 .priceFilter { display: flex; min-height: 72px; flex-direction: column; justify-content: space-between; }

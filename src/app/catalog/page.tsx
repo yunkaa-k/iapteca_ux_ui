@@ -22,6 +22,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   for (const key of facetKeys) facetPipeline[key] = [{ $match: { [key]: { $ne: null } } }, { $group: { _id: `$${key}` } }, { $sort: { _id: 1 } }];
   facetPipeline.forms = [{ $group: { _id: '$dosageForm', count: { $sum: 1 } } }];
   facetPipeline.priceBounds = [{ $group: { _id: null, max: { $max: '$price' } } }];
+  facetPipeline.categories = [{ $group: { _id: '$category' } }];
 
   const [total, categories, aggregated] = await Promise.all([
     MedicationModel.countDocuments(query.filter),
@@ -31,6 +32,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const page = Math.min(query.page, Math.max(1, Math.ceil(total / query.limit)));
   const medications = await MedicationModel.find(query.filter).sort(query.sort).skip((page - 1) * query.limit).limit(query.limit).lean();
   const raw = (aggregated[0] || {}) as Record<string, { _id: string | number | null; count?: number; max?: number }[]>;
+  const usedCategories = new Set((raw.categories || []).map(row => row._id));
+  const visibleCategories = categories.filter(category => usedCategories.has(category.name));
   const values = Object.fromEntries(facetKeys.map((key) => [key, (raw[key] || []).filter((row) => typeof row._id === 'string' || typeof row._id === 'number').map((row) => String(row._id)).filter(Boolean)]));
   const facets = {
     ...values,
@@ -40,7 +43,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 
   return (
     <Suspense>
-      <SearchAndFilters queryString={params.toString()} facets={facets} categories={JSON.parse(JSON.stringify(categories)) as Category[]} total={total}>
+      <SearchAndFilters queryString={params.toString()} facets={facets} categories={JSON.parse(JSON.stringify(visibleCategories)) as Category[]} total={total}>
         {medications.length ? (
           <>
             <div className={styles.products}>

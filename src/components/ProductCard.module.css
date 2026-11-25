@@ -103,6 +103,21 @@
   line-height: 28px;
 }
 
+.featuredDetails, .featuredPrice { display: contents; }
+.alternativeCard { gap: 16px; border: 1px solid var(--iapteca-border); box-shadow: none; }
+.alternativeCard .featuredImageLink { display: flex; justify-content: center; }
+.alternativeCard .featuredImage { width: 200px; height: 123px; max-width: 100%; }
+.alternativeCard .featuredDetails { display: flex; flex-direction: column; gap: 8px; }
+.alternativeCard .featuredTitle { min-height: 20px; color: var(--iapteca-heading); font-size: 18px; line-height: 20px; font-weight: 600; }
+.alternativeCard .featuredSummary { min-height: 19px; line-height: 19px; }
+.alternativeCard .featuredAvailability { min-height: 20px; }
+.alternativeCard .featuredFooter { min-height: 56px; gap: 12px; }
+.alternativeCard .featuredPrice { display: flex; flex-direction: column; gap: 8px; }
+.alternativeCard .featuredPrice strong { line-height: 27px; color: var(--iapteca-heading); }
+.alternativeCard .featuredPrice > span, .doseNote { margin: 0; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; }
+.doseNote.sameDose { color: var(--iapteca-success-ink); }
+.doseNote.differentDose { color: var(--iapteca-warning-ink); }
+
 .featuredCartButton {
   width: 40px;
   height: 40px;

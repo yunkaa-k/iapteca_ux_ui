@@ -10,13 +10,13 @@ import { useHydrated } from '@/lib/useHydrated';
 import { prescriptionFor, prescriptionsApproved, usePrescriptionStore } from '@/lib/store/prescriptionStore';
 import { requestStatus, usePrescriptionRequestStore } from '@/lib/store/prescriptionRequestStore';
 import { useCheckoutStore } from '@/lib/store/checkoutStore';
-import { checkoutDetails, DEMO_PHARMACIES, emptyCheckout, isDemoPickupUnavailable, validateCheckout, type CheckoutForm } from '@/lib/checkout';
+import { checkoutDetails, DEMO_PHARMACIES, emptyCheckout, validateCheckout, type CheckoutForm } from '@/lib/checkout';
 import { money } from '@/lib/product';
 import styles from './Checkout.module.css';
 import { DemoCardFields } from './DemoCardFields';
 import { demoPaymentOutcome, emptyDemoCard, validateDemoCard } from '@/lib/demo-payment';
 
-export function CheckoutContent({ requestId }: { requestId?: string }) {
+export function CheckoutContent({ requestId, pickupUnavailablePreview = false }: { requestId?: string; pickupUnavailablePreview?: boolean }) {
   const cartItems = useCartStore(state => state.items);
   const { user, isLoading: authLoading } = useAuthStore();
   const requests = usePrescriptionRequestStore();
@@ -52,7 +52,7 @@ export function CheckoutContent({ requestId }: { requestId?: string }) {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = form.receiving === 'courier' ? 59 : 0;
   const pharmacy = DEMO_PHARMACIES.find(p => p.id === form.pharmacyId);
-  const pickupUnavailable = form.receiving !== 'courier' && isDemoPickupUnavailable(items);
+  const pickupUnavailable = form.receiving !== 'courier' && pickupUnavailablePreview;
   const cartPath = request ? '/profile?tab=orders&request=' + request.id : '/cart';
   const started = Object.values(form).some(Boolean);
   useEffect(() => {

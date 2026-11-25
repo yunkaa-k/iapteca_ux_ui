@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SearchAndFilters } from '@/components/SearchAndFilters';
 import type { CatalogFacets } from '@/lib/catalog';
@@ -8,15 +8,54 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: navigation.push })
 const facets: CatalogFacets = { forms: { tablets: 2 }, dosage: [], packSize: [], activeIngredient: [], country: [], atcCode: [], brand: [], manufacturer: [], ageGroup: [], packageType: [], maxPrice: 10000 };
 const view = () => <SearchAndFilters facets={facets} categories={[]} total={0}><p>Results</p></SearchAndFilters>;
 const lastUrl = () => new URL(navigation.push.mock.calls.at(-1)![0], 'http://localhost');
+const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
 
 beforeEach(() => {
   navigation.query = '';
   navigation.push.mockClear();
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+  HTMLElement.prototype.scrollIntoView = vi.fn();
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); if (originalScrollIntoView) HTMLElement.prototype.scrollIntoView = originalScrollIntoView; else Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView'); });
 
 describe('catalog URL controls', () => {
+  it('shows short unique age options and navigates using the grouped age', async () => {
+    navigation.query = 'ageGroup=';
+    render(<SearchAndFilters facets={{ ...facets, ageGroup: ['Від 12 років.', 'Від 12 років; маса тіла — не менше 40 кг.', 'Від 6 років; маса тіла — понад 20 кг.', 'Дорослим; досвіду застосування дітям немає.', 'Дітям — відповідна форма та дозування за призначенням лікаря.'] }} categories={[]} total={0}><p>Results</p></SearchAndFilters>);
+    const trigger = screen.getByRole('combobox', { name: 'Вік пацієнта' });
+    act(() => trigger.focus());
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+    const list = await screen.findByRole('listbox');
+    expect(within(list).getAllByRole('option').map(option => option.textContent)).toEqual(['Будь-який вік', 'Від 6 років', 'Від 12 років', 'Для дорослих']);
+    const option = within(list).getByRole('option', { name: 'Від 12 років' });
+    act(() => option.focus());
+    fireEvent.keyDown(option, { key: 'Enter' });
+    expect(lastUrl().searchParams.get('ageGroup')).toBe('Від 12 років');
+  });
+  it('keeps only the five design dosage options even after combination strengths are filled', () => {
+    navigation.query = 'dosage=200+%D0%BC%D0%B3';
+    render(<SearchAndFilters facets={{ ...facets, dosage: ['0,86 мг (2500 МО) + 1 мг + 1 мг + 35 мг', '240 мг + 180 мг + 30 мг', '50 мг/г + 5 мг/г', '200 мг'] }} categories={[]} total={1}><p>Results</p></SearchAndFilters>);
+    const group = screen.getByRole('group', { name: 'Дозування' });
+    expect(within(group).getAllByRole('checkbox').map(box => box.closest('label')?.textContent)).toEqual(['200 мг', '400 мг', '500 мг', '5 мг', '60 мг']);
+    fireEvent.click(within(group).getByRole('checkbox', { name: '500 мг' }));
+    expect(lastUrl().searchParams.getAll('dosage')).toEqual(['200 мг', '500 мг']);
+  });
+  it('opens category options in design order and selects a category with the keyboard', async () => {
+    render(<SearchAndFilters facets={facets} categories={[
+      { _id: 'skin', name: 'Дерматологія та догляд' },
+      { _id: 'pain', name: 'Біль і запалення' },
+      { _id: 'cold', name: 'Застуда та грип' },
+    ]} total={0}><p>Results</p></SearchAndFilters>);
+    const trigger = screen.getByRole('combobox', { name: 'Категорія' });
+    act(() => trigger.focus());
+    fireEvent.keyDown(trigger, { key: 'ArrowDown' });
+    const list = await screen.findByRole('listbox');
+    expect(within(list).getAllByRole('option').map(option => option.textContent)).toEqual(['Усі категорії', 'Застуда та грип', 'Біль і запалення', 'Дерматологія та догляд']);
+    const option = within(list).getByRole('option', { name: 'Біль і запалення' });
+    act(() => option.focus());
+    fireEvent.keyDown(option, { key: 'Enter' });
+    expect(lastUrl().searchParams.get('category')).toBe('Біль і запалення');
+  });
   it('refreshes repeated filter combinations instead of reusing a stale navigation URL', () => {
     navigation.query = 'prescription=not-required&sort=price_desc';
     const result = render(view());
@@ -49,7 +88,7 @@ describe('catalog URL controls', () => {
     result.rerender(<SearchAndFilters queryString="prescription=required" facets={facets} categories={[]} total={1}><p>Rx results</p></SearchAndFilters>);
     expect(screen.getByRole('checkbox', { name: 'Без рецепта' })).toHaveAttribute('aria-checked', 'false');
     expect(screen.getByRole('checkbox', { name: 'Рецептурні' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('status')).toHaveTextContent('Знайдено 1 товарів');
+    expect(screen.getByRole('status')).toHaveTextContent('Знайдено 1 товар');
     expect(screen.queryByText('OTC results')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('checkbox', { name: 'Рецептурні' }));
     expect(lastUrl().searchParams.has('prescription')).toBe(false);

@@ -7,6 +7,29 @@ export const dosageForms = [
   { value: 'dragees', label: 'Драже' },
 ] as const;
 
+// Facet options follow Screens; full combination strengths remain product facts.
+export const catalogDosages = ['200 мг', '400 мг', '500 мг', '5 мг', '60 мг'] as const;
+export const catalogCategoryOrder = ['Застуда та грип', 'Біль і запалення', 'Шлунково-кишковий тракт', 'Серцево-судинні', 'Вітаміни та мінерали', 'Дерматологія та догляд'] as const;
+
+const productPlural = new Intl.PluralRules('uk-UA');
+export function catalogResultCount(count: number) {
+  const form = productPlural.select(count);
+  return `Знайдено ${count} ${form === 'one' ? 'товар' : form === 'few' ? 'товари' : 'товарів'}`;
+}
+
+// Keep instruction caveats on product pages, not in the age facet labels.
+export function catalogAgeLabel(value: string) {
+  const minimum = value.match(/^Від (\d+) років(?:[.;\s]|$)/i);
+  if (minimum) return `Від ${Number(minimum[1])} років`;
+  if (/^(Дорослим|Не застосовувати у педіатричній практиці)/i.test(value)) return 'Для дорослих';
+  return '';
+}
+
+export function catalogAgeOptions(values: string[]) {
+  return [...new Set(values.map(catalogAgeLabel).filter(Boolean))]
+    .sort((a, b) => (Number(a.match(/\d+/)?.[0]) || Infinity) - (Number(b.match(/\d+/)?.[0]) || Infinity));
+}
+
 export const catalogSelects = [
   { key: 'activeIngredient', label: 'Діюча речовина', placeholder: 'Усі діючі речовини' },
   { key: 'country', label: 'Країна виробництва', placeholder: 'Усі країни' },
@@ -42,6 +65,9 @@ export function catalogQuery(params: URLSearchParams, defaultLimit = 20) {
   if (text(params, 'category')) filter.category = text(params, 'category');
   if (params.get('inStock') === 'true') filter.stock = { $gt: 0 };
   for (const { key } of catalogSelects) if (text(params, key)) filter[key] = text(params, key);
+  const age = text(params, 'ageGroup');
+  if (/^Від \d+ років$/.test(age)) filter.ageGroup = { $regex: `^${escapeRegex(age)}(?:[.;\\s]|$)`, $options: 'i' };
+  else if (age === 'Для дорослих') filter.ageGroup = { $regex: '^(Дорослим|Не застосовувати у педіатричній практиці)', $options: 'i' };
   const forms = list(params, 'form').filter((value) => dosageForms.some((form) => form.value === value));
   if (forms.length) filter.dosageForm = { $in: forms };
   const dosages = list(params, 'dosage');

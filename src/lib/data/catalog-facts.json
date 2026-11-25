@@ -1,0 +1,167 @@
+{
+  "Валідол-Дарниця 60 мг №10": {
+    "sourceUrl": "https://darnytsia.ua/catalog/validol-darnitsya",
+    "checkedAt": "2026-11-25",
+    "summary": "Розчин ментолу в ментиловому ефірі ізовалеріанової кислоти, 60 мг у таблетці. Упаковка — 10 таблеток.",
+    "facts": {
+      "manufacturer": "ПрАТ «Фармацевтична фірма “Дарниця”»",
+      "country": "Україна",
+      "activeIngredient": "Розчин ментолу в ментиловому ефірі ізовалеріанової кислоти",
+      "dosage": "60 мг",
+      "dosageFormDetails": "Таблетки",
+      "packageDescription": "10 табл.",
+      "ageGroup": "Дорослим; досвіду застосування дітям немає.",
+      "atcCode": "C01EX"
+    }
+  },
+  "Парацетамол 500 мг №10": {
+    "sourceUrl": "https://darnytsia.ua/catalog/paratsetamol-darnitsya",
+    "checkedAt": "2026-11-25",
+    "summary": "Парацетамол, 500 мг у таблетці. Упаковка — 10 таблеток.",
+    "facts": {
+      "manufacturer": "ПрАТ «Фармацевтична фірма “Дарниця”»",
+      "country": "Україна",
+      "activeIngredient": "Парацетамол",
+      "dosage": "500 мг",
+      "dosageFormDetails": "Таблетки",
+      "packageDescription": "10 табл.",
+      "ageGroup": "Від 6 років; застосування дітям — згідно з інструкцією.",
+      "atcCode": "N02BE01"
+    }
+  },
+  "Цитрамон-Дарниця №10": {
+    "sourceUrl": "https://darnytsia.ua/catalog/tsitramon-darnitsya",
+    "checkedAt": "2026-11-25",
+    "summary": "У таблетці: ацетилсаліцилова кислота — 240 мг, парацетамол — 180 мг, кофеїн — 30 мг. Упаковка — 10 таблеток.",
+    "facts": {
+      "manufacturer": "ПрАТ «Фармацевтична фірма “Дарниця”»",
+      "country": "Україна",
+      "activeIngredient": "Ацетилсаліцилова кислота, парацетамол, кофеїн",
+      "dosage": "240 мг + 180 мг + 30 мг",
+      "dosageFormDetails": "Таблетки",
+      "packageDescription": "10 табл.",
+      "ageGroup": "Дорослим. Дітям протипоказано без особливих показань, зазначених в інструкції.",
+      "atcCode": "N02BA51"
+    }
+  },
+  "Ібупрофен-Дарниця №20": {
+    "sourceUrl": "https://darnytsia.ua/catalog/ibuprofen-darnitsya",
+    "checkedAt": "2026-11-25",
+    "summary": "Ібупрофен, 200 мг у таблетці. Упаковка — 20 таблеток.",
+    "facts": {
+      "manufacturer": "ПрАТ «Фармацевтична фірма “Дарниця”»",
+      "country": "Україна",
+      "activeIngredient": "Ібупрофен",
+      "dosage": "200 мг",
+      "dosageFormDetails": "Таблетки",
+      "packageDescription": "20 табл.",
+      "ageGroup": "Від 6 років; маса тіла — понад 20 кг.",
+      "atcCode": "M01AE01"
+    }
+  },
+  "Ревіт драже №100": {
+    "sourceUrl": "https://lekhim.ua/uk/product/revit",
+    "checkedAt": "2026-11-25",
+    "summary": "Драже з вітамінами A, B1, B2 та C. Упаковка — 100 драже.",
+    "facts": {
+      "manufacturer": "ПрАТ «Технолог»",
+      "country": "Україна",
+      "activeIngredient": "Ретинолу ацетат, тіаміну гідрохлорид, рибофлавін, аскорбінова кислота",
+      "dosage": "0,86 мг (2500 МО) + 1 мг + 1 мг + 35 мг",
+      "dosageFormDetails": "Драже",
+      "packageDescription": "100 драже",
+      "ageGroup": "Від 3 років для лікування; для профілактики дітям — від 11 років, за інструкцією.",
+      "atcCode": "A11BA"
+    }
+  },
+  "Амоксицилін 500 мг №10": {
+    "sourceUrl": "https://tabletki.ua/uk/Амоксициллин/1044556/",
+    "checkedAt": "2026-11-25",
+    "summary": "Амоксицилін у формі тригідрату, 500 мг у капсулі. Упаковка — 10 капсул. Відпускається за рецептом.",
+    "facts": {
+      "manufacturer": "Antibiotice S.A.",
+      "country": "Румунія",
+      "activeIngredient": "Амоксицилін",
+      "dosage": "500 мг",
+      "dosageFormDetails": "Капсули",
+      "packageDescription": "10 капс.",
+      "ageGroup": "Дітям — відповідна форма та дозування за призначенням лікаря з урахуванням віку й маси тіла; див. інструкцію.",
+      "atcCode": "J01CA04"
+    }
+  },
+  "Бісакодил-Дарниця 5 мг №30": {
+    "sourceUrl": "https://darnytsia.ua/catalog/bisakodil-darnitsya",
+    "checkedAt": "2026-11-25",
+    "summary": "Бісакодил, 5 мг у кишковорозчинній таблетці. Упаковка — 30 таблеток.",
+    "facts": {
+      "manufacturer": "ПрАТ «Фармацевтична фірма “Дарниця”»",
+      "country": "Україна",
+      "activeIngredient": "Бісакодил",
+      "dosage": "5 мг",
+      "dosageFormDetails": "Таблетки, вкриті оболонкою, кишковорозчинні",
+      "packageDescription": "30 табл.",
+      "ageGroup": "Від 4 років; у віці 4–10 років — тільки за призначенням лікаря.",
+      "atcCode": "A06AB02"
+    }
+  },
+  "Нурофен 200 мг №24": {
+    "sourceUrl": "https://tabletki.ua/uk/Nurofen/15973/",
+    "checkedAt": "2026-11-25",
+    "summary": "В одній таблетці — 200 мг ібупрофену.",
+    "facts": {
+      "manufacturer": "Реккітт Бенкізер Хелскер Інтернешнл Лімітед",
+      "country": "Велика Британія",
+      "activeIngredient": "Ібупрофен",
+      "dosage": "200 мг",
+      "dosageFormDetails": "Таблетки, вкриті оболонкою",
+      "packageDescription": "24 табл.",
+      "ageGroup": "Від 6 років; маса тіла — понад 20 кг.",
+      "atcCode": "M01AE01"
+    }
+  },
+  "Нурофен Форте №12": {
+    "sourceUrl": "https://tabletki.ua/uk/Нурофєн-форте/2948/",
+    "checkedAt": "2026-11-25",
+    "summary": "Ібупрофен, 400 мг у таблетці, вкритій оболонкою. Упаковка — 12 таблеток.",
+    "facts": {
+      "manufacturer": "Реккітт Бенкізер Хелскер Інтернешнл Лімітед",
+      "country": "Велика Британія",
+      "activeIngredient": "Ібупрофен",
+      "dosage": "400 мг",
+      "dosageFormDetails": "Таблетки, вкриті оболонкою",
+      "packageDescription": "12 табл.",
+      "ageGroup": "Від 12 років.",
+      "atcCode": "M01AE01"
+    }
+  },
+  "Метилурацил з мірамістином 30 г": {
+    "sourceUrl": "https://darnytsia.ua/catalog/metiluratsil-z-miramistinom",
+    "checkedAt": "2026-11-25",
+    "summary": "Мазь: у 1 г — 50 мг метилурацилу та 5 мг мірамістину. Упаковка — 1 туба, 30 г.",
+    "facts": {
+      "manufacturer": "ПрАТ «Фармацевтична фірма “Дарниця”»",
+      "country": "Україна",
+      "activeIngredient": "Метилурацил, мірамістин",
+      "dosage": "50 мг/г + 5 мг/г",
+      "dosageFormDetails": "Мазь",
+      "packageDescription": "1 туба, 30 г",
+      "ageGroup": "Не застосовувати у педіатричній практиці через недостатній досвід застосування.",
+      "atcCode": "D03AX"
+    }
+  },
+  "Ібупрофен 400 мг №20": {
+    "sourceUrl": "https://www.lekhim.ua/uk/ibuprofen-400_dose-400-mg-no20",
+    "checkedAt": "2026-11-25",
+    "summary": "Ібупрофен, 400 мг у таблетці, вкритій оболонкою. Упаковка — 20 таблеток.",
+    "facts": {
+      "manufacturer": "ПрАТ «Технолог»",
+      "country": "Україна",
+      "activeIngredient": "Ібупрофен",
+      "dosage": "400 мг",
+      "dosageFormDetails": "Таблетки, вкриті оболонкою",
+      "packageDescription": "20 табл.",
+      "ageGroup": "Від 12 років; маса тіла — не менше 40 кг.",
+      "atcCode": "M01AE01"
+    }
+  }
+}

@@ -52,10 +52,10 @@ describe('suggestions API', () => {
     expect(connectDB).not.toHaveBeenCalled();
   });
   it('returns only projected products and matching active ingredients', async () => {
-    vi.mocked(MedicationModel.find).mockReturnValue(result([{ _id: 'p1', name: 'Alpha', price: 145, stock: 2, activeIngredient: 'alpha' }]) as never);
+    vi.mocked(MedicationModel.find).mockReturnValue(result([{ _id: 'p1', name: 'Alpha', description: '500 мг · 10 табл.', price: 145, stock: 2, activeIngredient: 'alpha', requiresPrescription: true, dosage: '500 мг', packSize: 10 }]) as never);
     const response = await GET(request('al'));
     expect(response.headers.get('cache-control')).toBe('no-store');
-    expect(await response.json()).toMatchObject({ products: [{ _id: 'p1', price: 145 }], ingredients: ['alpha'], correction: null });
+    expect(await response.json()).toMatchObject({ products: [{ _id: 'p1', price: 145, description: '500 мг · 10 табл.', requiresPrescription: true, dosage: '500 мг', packSize: 10 }], ingredients: ['alpha'], correction: null });
     expect(MedicationModel.find).toHaveBeenCalledWith(expect.objectContaining({ isDeleted: { $ne: true } }));
   });
   it('proposes a known catalog word without inventing products or silently changing the query', async () => {

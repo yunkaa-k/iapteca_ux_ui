@@ -37,6 +37,8 @@ const medicationSchema = new Schema<Medication>({
   image: { type: String },
   isDeleted: { type: Boolean, default: false },
   dosageForm: { type: String, enum: ['tablets', 'capsules', 'suspensions', 'powders', 'ointments', 'dragees'] },
+  dosageFormDetails: { type: String },
+  packageDescription: { type: String },
   dosage: { type: String },
   packSize: { type: Number, min: 1 },
   requiresPrescription: { type: Boolean },

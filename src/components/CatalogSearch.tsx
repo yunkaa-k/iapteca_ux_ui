@@ -5,7 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchHistoryStore } from '@/lib/store/searchHistoryStore';
 import { useHydrated } from '@/lib/useHydrated';
-import { popularQueries, symptomCategories, type SearchSuggestions } from '@/lib/searchSuggestions';
+import { popularQueries, suggestedQueries, symptomCategories, type SearchSuggestions } from '@/lib/searchSuggestions';
+import { useCartStore } from '@/lib/store/cartStore';
+import { notifyCartAdded } from './ProductFeedback';
 import styles from './CatalogSearch.module.css';
 
 type ResponseState = { key: string; data?: SearchSuggestions; failed?: boolean };
@@ -32,6 +34,8 @@ export function CatalogSearch({ initialValue, disabled, onSearch, onCategory, on
   const remember = useSearchHistoryStore((state) => state.remember);
   const remove = useSearchHistoryStore((state) => state.remove);
   const clearHistory = useSearchHistoryStore((state) => state.clear);
+  const addItem = useCartStore(state => state.addItem);
+  const cartItems = useCartStore(state => state.items);
   const query = value.trim();
   const requestKey = `${query}:${retry}`;
   const current = response?.key === requestKey ? response : null;
@@ -59,7 +63,7 @@ export function CatalogSearch({ initialValue, disabled, onSearch, onCategory, on
 
   useEffect(() => {
     if (open && focusEdge.current) {
-      const targets = Array.from(panel.current?.querySelectorAll<HTMLElement>('[data-search-choice]') || []);
+      const targets = Array.from(panel.current?.querySelectorAll<HTMLElement>('[data-search-choice]:not(:disabled)') || []);
       (focusEdge.current > 0 ? targets[0] : targets.at(-1))?.focus();
       focusEdge.current = 0;
     }
@@ -85,7 +89,7 @@ export function CatalogSearch({ initialValue, disabled, onSearch, onCategory, on
     event.preventDefault();
     const direction = event.key === 'ArrowDown' ? 1 : -1;
     if (!open) { focusEdge.current = direction; setOpen(true); return; }
-    const targets = Array.from(panel.current?.querySelectorAll<HTMLElement>('[data-search-choice]') || []);
+    const targets = Array.from(panel.current?.querySelectorAll<HTMLElement>('[data-search-choice]:not(:disabled)') || []);
     if (!targets.length) return;
     const index = targets.indexOf(event.target as HTMLElement);
     const next = fromInput ? direction > 0 ? 0 : targets.length - 1 : (index + direction + targets.length) % targets.length;
@@ -93,6 +97,9 @@ export function CatalogSearch({ initialValue, disabled, onSearch, onCategory, on
   }
 
   const data = current?.data;
+  const queries = data ? suggestedQueries(query, data.products, data.ingredients) : [];
+  const ingredient = data?.ingredients.find(term => !/[,;+]/.test(term)) || data?.ingredients[0];
+  const allResultsQuery = ingredient?.toLocaleLowerCase('uk-UA').startsWith(query.toLocaleLowerCase('uk-UA')) ? ingredient.toLocaleLowerCase('uk-UA') : query;
 
   return (
     <div className={styles.wrapper} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close(); }}>
@@ -104,7 +111,7 @@ export function CatalogSearch({ initialValue, disabled, onSearch, onCategory, on
         <button className={styles.submit} type="submit" disabled={disabled}>Знайти</button>
       </form>
 
-      {open && !disabled && <div ref={panel} id="catalog-suggestions" className={styles.panel} role="dialog" aria-label="Підказки пошуку" onKeyDown={(event) => keys(event)}>
+      {open && !disabled && <div ref={panel} id="catalog-suggestions" className={`${styles.panel} ${data?.products.length ? styles.productPanel : ''}`} role="dialog" aria-label="Підказки пошуку" onKeyDown={(event) => keys(event)}>
         {query.length < 2 ? (
           <>
             <section className={styles.section}>
@@ -119,17 +126,22 @@ export function CatalogSearch({ initialValue, disabled, onSearch, onCategory, on
         ) : data?.products.length ? (
           <div className={styles.columns}>
             <div className={styles.queries}>
-              <section className={styles.section}><h2>ЗАПИТИ</h2>{[...new Set([query, ...data.products.slice(0, 2).map((product) => product.name)])].map((term) => <SearchChoice key={term} onClick={() => chooseSearch(term)}>{term}</SearchChoice>)}</section>
-              {data.ingredients.length > 0 && <section className={styles.section}><h2>ДІЮЧА РЕЧОВИНА</h2>{data.ingredients.map((term) => <SearchChoice key={term} onClick={() => chooseSearch(term)}>{term}</SearchChoice>)}</section>}
+              <section className={styles.section}><h2>ЗАПИТИ</h2><div className={styles.queryList}>{queries.map((term, index) => <SearchChoice key={term} className={`${styles.queryChoice} ${index === 0 ? styles.queryPrimary : ''}`} onClick={() => chooseSearch(term)}><Image src={index === 0 ? '/images/catalog/query-search.svg' : '/images/catalog/query-search-muted.svg'} alt="" width={16} height={16} /><span>{term}</span></SearchChoice>)}</div></section>
+              {ingredient && <section className={styles.section}><h2>ДІЮЧА РЕЧОВИНА</h2><div className={styles.ingredientList}>{[
+                { title: ingredient, hint: 'Усі препарати з цією діючою речовиною' },
+                { title: ingredient.toLocaleLowerCase('uk-UA') === 'парацетамол' ? 'Препарати з парацетамолом' : `Препарати: ${ingredient}`, hint: 'Порівняйте склад та дозування' },
+              ].map(item => <SearchChoice key={item.title} className={styles.ingredientChoice} onClick={() => chooseSearch(ingredient)}><Image src="/images/catalog/ingredient-link.svg" alt="" width={20} height={20} /><span><strong>{item.title}</strong><small>{item.hint}</small></span></SearchChoice>)}</div></section>}
             </div>
             <section className={styles.productSection}><h2>ТОВАРИ</h2>
               {data.products.map((product) => {
-                return <Link data-search-choice className={styles.product} href={`/product/${product._id}`} key={product._id} onClick={() => { remember(query); close(); }}>
-                  <span className={styles.productImage}>{product.image ? <Image src={product.image} alt="" fill sizes="56px" /> : <Image src="/images/home/search.svg" alt="" width={20} height={20} />}</span>
-                  <span className={styles.productCopy}><strong>{product.name}</strong><span>{product.stock > 0 ? 'В наявності' : 'Немає в наявності'}</span></span><strong className={styles.price}>{product.price.toLocaleString('uk-UA')} грн</strong>
-                </Link>;
+                const canAdd = product.stock > (hydrated ? cartItems.find(item => item._id === product._id)?.quantity || 0 : 0);
+                return <div className={styles.product} key={product._id}><Link data-search-choice className={styles.productLink} href={`/product/${product._id}`} onClick={() => { remember(query); close(); }}>
+                  <span className={styles.productImage}>{product.image ? <Image src={product.image} alt="" fill sizes="72px" /> : <Image src="/images/home/search.svg" alt="" width={20} height={20} />}</span>
+                  <span className={styles.productCopy}><strong>{product.name}</strong>{product.description && <span>{product.description}</span>}<span className={`${styles.availability} ${product.stock <= 0 ? styles.unavailable : ''}`}><Image src={product.stock > 0 ? '/images/home/availability-dot.svg' : '/images/home/availability-error-dot.svg'} alt="" width={8} height={8} />{product.stock > 0 ? 'В наявності' : 'Немає в наявності'}</span></span></Link><span className={styles.price}>{product.price.toLocaleString('uk-UA')} грн</span>
+                  <button data-search-choice type="button" className={styles.cartButton} disabled={!canAdd} aria-label={`Додати ${product.name} до кошика`} onClick={() => { addItem({ ...product, description: product.description || '', category: product.category || '', manufacturer: product.manufacturer || '' }); notifyCartAdded(product.name); }}><Image src="/images/home/cart-add.svg" alt="" width={20} height={20} /></button>
+                </div>;
               })}
-              <SearchChoice className={styles.allResults} onClick={() => chooseSearch(query)}>Усі результати за «{query}»</SearchChoice>
+              <SearchChoice className={styles.allResults} onClick={() => chooseSearch(allResultsQuery)}>Усі результати за «{allResultsQuery}»</SearchChoice>
             </section>
           </div>
         ) : (

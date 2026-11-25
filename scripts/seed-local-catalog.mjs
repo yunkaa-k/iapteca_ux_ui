@@ -21,6 +21,7 @@ const products = [
 const stableId = key => new mongoose.Types.ObjectId(createHash('sha256').update(`iapteca-ux-ui-demo-v1:${key}`).digest('hex').slice(0, 24));
 const categoryByName = JSON.parse(readFileSync(new URL('./catalog-categories.json', import.meta.url), 'utf8'));
 const prescriptionByName = JSON.parse(readFileSync(new URL('./catalog-prescriptions.json', import.meta.url), 'utf8'));
+const factsByName = JSON.parse(readFileSync(new URL('../src/lib/data/catalog-facts.json', import.meta.url), 'utf8'));
 config({ path: '.env.local', quiet: true });
 let connection;
 let session;
@@ -58,7 +59,8 @@ try {
       const _id = stableId(`medication:${product.name}`);
       if (await medications.findOne({ _id }, { session })) throw new Error('MedicationIdCollision');
       const now = new Date();
-      await medications.insertOne({ _id, ...product, ...(prescriptionByName[product.name] ? { requiresPrescription: prescriptionByName[product.name].requiresPrescription } : {}), category: categoryByName[product.name], manufacturer: 'Не вказано', isDeleted: false, createdAt: now, updatedAt: now }, { session });
+      if (!factsByName[product.name]) throw new Error('MissingVerifiedFacts');
+      await medications.insertOne({ _id, ...product, ...factsByName[product.name].facts, ...(prescriptionByName[product.name] ? { requiresPrescription: prescriptionByName[product.name].requiresPrescription } : {}), category: categoryByName[product.name], isDeleted: false, createdAt: now, updatedAt: now }, { session });
       inserted++;
     }
   });

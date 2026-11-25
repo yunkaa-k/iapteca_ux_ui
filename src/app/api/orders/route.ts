@@ -4,7 +4,7 @@ import { getAuthUser } from '@/lib/auth';
 import mongoose from 'mongoose';
 import { logger } from '@/lib/logger';
 import type { Order, OrderItem } from '@/lib/types';
-import { isDemoPickupUnavailable, parseCheckout } from '@/lib/checkout';
+import { parseCheckout } from '@/lib/checkout';
 import { createHash, randomBytes } from 'node:crypto';
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
@@ -77,7 +77,6 @@ export async function POST(req: Request) {
         }
       }
       const items: OrderItem[] = [];
-      const pickupItems: Pick<OrderItem, 'kind' | 'slug' | 'name'>[] = [];
       let subtotal = 0;
       for (const [key, quantity] of orderedQuantities) {
         if (key.startsWith('bundle:')) {
@@ -97,7 +96,6 @@ export async function POST(req: Request) {
             if (component.requiresPrescription === true) throw new Error('Склад аптечки потребує окремого погодження.');
           }
           items.push({ medication, kind: 'bundle', quantity, price: bundle.price, name: bundle.name, description: bundle.description, image: bundle.image, slug: bundle.slug, components: bundle.components.map((c: { medication: string; quantity: number; name: string }) => ({ medication: c.medication.toString(), quantity: c.quantity, name: c.name })) });
-          pickupItems.push({ kind: 'bundle', slug: bundle.slug });
           subtotal += Math.round(bundle.price * 100) * quantity;
           continue;
         }
@@ -110,12 +108,7 @@ export async function POST(req: Request) {
         if (!user && med.requiresPrescription === true) throw new Error('Для рецептурних препаратів увійдіть і збережіть заявку на перевірку рецепта.');
         if (!Number.isFinite(med.price) || med.price < 0) throw new Error('Не вдалося перевірити ціну товару.');
         items.push({ medication, quantity, price: med.price });
-        pickupItems.push({ name: med.name });
         subtotal += Math.round(med.price * 100) * quantity;
-      }
-      if (parsed.details?.delivery.method === 'pickup' && isDemoPickupUnavailable(pickupItems)) {
-        await session.abortTransaction();
-        return NextResponse.json({ error: 'Немає аптеки з усіма товарами. Оберіть доставку або змініть склад кошика.' }, { status: 400 });
       }
       subtotal /= 100;
       const total = subtotal + (parsed.details?.delivery.fee || 0);

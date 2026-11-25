@@ -5,6 +5,19 @@ export interface SearchProduct {
   stock: number;
   image?: string;
   activeIngredient?: string;
+  description?: string;
+  category?: string;
+  manufacturer?: string;
+  dosage?: string;
+  packSize?: number;
+  requiresPrescription?: boolean;
+}
+
+export function suggestedQueries(query: string, products: SearchProduct[], ingredients: string[]) {
+  const ingredient = ingredients.find(value => !/[,;+]/.test(value));
+  const product = products.find(value => ingredient && value.activeIngredient === ingredient) || products[0];
+  const base = ingredient?.toLocaleLowerCase('uk-UA') || query;
+  return [...new Set([base, ...(product?.dosage ? [`${base} ${product.dosage}`] : []), ...(product?.packSize ? [`${base} №${product.packSize}`] : [])])].slice(0, 3);
 }
 
 export interface SearchSuggestions {
