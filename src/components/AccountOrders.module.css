@@ -1,0 +1,80 @@
+.requests { display: flex; flex-direction: column; gap: 16px; }
+.requests > h2, .sectionHeading, .panel h2, .orderCard h2, .orderCard h3 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; color: var(--iapteca-heading); }
+.requests > p, .panel > p, .heading p, .cardText p { font-size: 14px; line-height: normal; color: var(--iapteca-muted); margin: 0; }
+.panel { display: flex; flex-direction: column; gap: 24px; padding: 32px; border-radius: 16px; border: 1px solid var(--iapteca-border); background: var(--iapteca-surface); color: var(--iapteca-heading); }
+.orderCard { display: flex; flex-direction: column; gap: 20px; padding: 24px; border-radius: 16px; border: 1px solid var(--iapteca-border); background: var(--iapteca-surface); color: var(--iapteca-heading); text-decoration: none; }
+.heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.heading > div { display: flex; flex-direction: column; gap: 8px; }
+.badge { border-radius: 20px; padding: 6px 12px; font-size: 14px; line-height: 20px; font-weight: 500; white-space: nowrap; }
+.reviewing { color: var(--iapteca-warning-ink); background: var(--iapteca-warning-surface); }
+.approved { color: var(--iapteca-success-ink); background: var(--iapteca-success-surface); }
+.needs-new-photo, .cancelled { color: var(--iapteca-error-ink); background: var(--iapteca-error-surface); }
+.completed { color: var(--iapteca-primary); background: var(--secondary); }
+.cardSummary { display: flex; align-items: center; gap: 16px; }
+.cardSummary > strong { font-size: 20px; line-height: normal; margin-left: auto; white-space: nowrap; }
+.cardText { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.cardText strong { font-size: 16px; font-weight: 500; }
+.thumbnails { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.thumbnails > div { position: relative; width: 80px; height: 60px; }
+.thumbnails img { object-fit: contain; }
+.thumbnails > span { padding: 12px; color: var(--iapteca-primary); background: var(--secondary); border-radius: 10px; }
+.textLink, .back { display: inline-flex; align-items: center; gap: 8px; color: var(--iapteca-primary); cursor: pointer; }
+.textLink { font-size: 16px; font-weight: 600; line-height: 22px; }
+.back { font-size: 14px; font-weight: 500; line-height: 20px; }
+.explanation { padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+.explanation strong { font-size: 16px; font-weight: 600; line-height: 22px; }
+.explanation p { font-size: 14px; line-height: normal; margin: 0; }
+.products { display: flex; flex-direction: column; gap: 16px; }
+.product { display: flex; align-items: center; gap: 20px; padding-block: 16px; min-height: 100px; }
+.product + .product { border-top: 1px solid var(--iapteca-border); }
+.productImage { position: relative; width: 104px; height: 80px; flex: 0 0 104px; }
+.productImage img { object-fit: contain; }
+.productText { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 6px; }
+.productText strong { font-size: 16px; line-height: 1.4; font-weight: 500; }
+.productText p, .quantity { font-size: 14px; margin: 0; color: var(--iapteca-muted); }
+.quantity { width: 64px; text-align: right; flex-shrink: 0; }
+.price { width: 96px; text-align: right; font-size: 16px; font-weight: 600; flex-shrink: 0; }
+.total { border-top: 1px solid var(--iapteca-border); padding-top: 24px; display: flex; justify-content: space-between; align-items: start; font-size: 16px; font-weight: 500; }
+.total strong { font-size: 20px; font-weight: 700; }
+.file { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 12px; background: var(--iapteca-background); }
+.receipt { width: 32px; height: 32px; display: grid; place-items: center; flex-shrink: 0; }
+.file > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.file strong { font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+.file p { font-size: 14px; margin: 0; color: var(--iapteca-muted); }
+.primary, .secondary, .cancel, .confirm { display: inline-flex; align-items: center; justify-content: center; align-self: start; gap: 8px; min-height: 48px; padding: 12px 16px; border-radius: 12px; font-size: 16px; font-weight: 600; line-height: 22px; cursor: pointer; }
+.panel .primary, .panel .secondary { min-height: 54px; }
+.primary { background: var(--iapteca-primary); color: white; }
+.primary:hover { background: var(--iapteca-primary-hover); }
+.secondary { background: var(--secondary); color: var(--iapteca-primary); border: 1px solid var(--iapteca-border); }
+.cancel { min-height: 44px; background: var(--iapteca-error-surface); color: var(--iapteca-error-ink); }
+.confirm { background: var(--iapteca-error-ink); color: white; }
+.overlay[data-slot] { background: rgb(16 37 65 / 42%); backdrop-filter: none; }
+.dialog { position: fixed; z-index: 60; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; max-width: calc(100% - 32px); padding: 32px; border: 1px solid var(--iapteca-border); border-radius: 16px; background: white; display: flex; flex-direction: column; gap: 24px; }
+.dialogTitle { font-size: 24px; font-weight: 600; line-height: normal; color: var(--iapteca-heading); margin: 0; }
+.dialogDescription { font-size: 16px; font-weight: 500; line-height: 1.4; color: var(--iapteca-muted); margin: 0; }
+.dialogActions { display: flex; gap: 16px; }
+.dialogActions button { flex: 1; }
+.orderIdentity { display: flex; align-items: center; gap: 16px; }
+.orderIdentity h2 { font-size: 20px; line-height: 28px; font-weight: 600; }
+.orderDetails .products { gap: 0; }
+.orderDetails .product { min-height: 100px; }
+.orderDetails .explanation { padding: 24px; }
+.orderDetails .explanation strong { font-size: 14px; font-weight: 500; line-height: 20px; }
+.orderDetails .explanation p { color: var(--iapteca-muted); font-weight: 400; }
+.warning { color: var(--iapteca-warning-ink); background: var(--iapteca-warning-surface); }
+.success { color: var(--iapteca-success-ink); background: var(--iapteca-success-surface); }
+.error { color: var(--iapteca-error-ink); background: var(--iapteca-error-surface); }
+.info { color: var(--iapteca-primary); background: var(--secondary); }
+.orderTotals { display: flex; flex-direction: column; gap: 20px; padding-top: 24px; border-top: 1px solid var(--iapteca-border); }
+.orderTotals > div { display: flex; justify-content: space-between; gap: 24px; }
+.orderTotals > div:first-child { color: var(--iapteca-muted); font-size: 14px; line-height: 20px; }
+.orderTotals strong { font-size: 20px; line-height: 28px; font-weight: 600; }
+.receivingDetails { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 32px 24px; margin: 0; }
+.receivingDetails dt { margin-bottom: 8px; color: var(--iapteca-muted); font-size: 14px; line-height: 20px; }
+.receivingDetails dd { margin: 0; font-size: 16px; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.fullWidth, .contactRow { grid-column: 1 / -1; }
+.contactRow { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px; padding-top: 24px; border-top: 1px solid var(--iapteca-border); }
+.actionError { margin: 0; font-size: 14px; color: var(--iapteca-error-ink); }
+.demoCaption { margin: 0; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; }
+.dialogActions button:disabled { opacity: .6; cursor: wait; }
+.orderCard:focus-visible, .primary:focus-visible, .secondary:focus-visible, .cancel:focus-visible, .confirm:focus-visible, .back:focus-visible, .textLink:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 3px; }

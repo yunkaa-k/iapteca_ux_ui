@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# iApteca
 
-## Getting Started
+iApteca — учебный проект интернет-аптеки на Next.js, React, TypeScript и MongoDB. Приложение запускается непосредственно в Windows; Docker Compose используется только для локальной MongoDB.
 
-First, run the development server:
+## Требования
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Windows и Docker Desktop с Linux containers.
+- Node.js 22 и pnpm.
+- MongoDB Database Tools на Windows — только для создания backup.
+
+## Локальный запуск
+
+**Первичная настройка:** шаг 2 выполняется только один раз. Если `.env.local`, keyFile и volume уже существуют, сохраните их и начинайте с шага 3.
+
+1. Запустите Docker Desktop и убедитесь, что у проекта ещё нет MongoDB volume. Скрипт настройки остановится, если найдёт существующий volume, чтобы не затронуть его данные.
+2. В PowerShell из корня проекта выполните `./scripts/setup-local.ps1`. Скрипт создаст `.env.local` и локальный Replica Set key file, не показывая их значения.
+3. Проверьте Compose без вывода переменных: `docker compose --env-file .env.local config --quiet`.
+4. Запустите MongoDB: `docker compose --env-file .env.local up -d mongo`.
+5. Дождитесь статуса `healthy`: `docker compose --env-file .env.local ps`.
+6. Запустите приложение: `pnpm dev` и откройте <http://localhost:3000>.
+
+Подробная инструкция, Replica Set, транзакции, остановка и backup описаны в [`docs/local-development.md`](docs/local-development.md).
+
+## Проверки
+
+Вход: `/login`, регистрация: `/register`; оба сценария работают только по email. Для существующей локальной БД перед первым созданием email-аккаунтов выполните `node scripts/prepare-email-auth.mjs`. Подробности сессий и ограничений отправки писем: [docs/authentication.md](docs/authentication.md).
+
+```powershell
+pnpm test:run
+pnpm exec tsc --noEmit
+pnpm lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Проверить MongoDB, `rs0` и транзакцию с последующим abort можно командой `pnpm exec node scripts/test-mongo-transactions.mjs` после запуска MongoDB.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Структура
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app/` — страницы Next.js App Router и API Routes.
+- `src/components/` — интерфейсные компоненты.
+- `src/lib/` — Mongoose-модели, подключение и состояние Zustand.
+- `scripts/` — локальная настройка MongoDB, проверка транзакций, подготовка email-индексов и демонстрационного каталога.
+- `docs/architecture.md` — актуальная архитектура и границы учебного проекта.
 
-## Learn More
+Для заполнения собственного локального каталога: `pnpm seed:local`. Не запускайте первоначальную настройку повторно для существующей базы.
 
-To learn more about Next.js, take a look at the following resources:
+Готовые аптечки: `/kits`. Для заполнения пяти демонстрационных наборов выполните `node scripts/seed-local-bundles.mjs`: скрипт работает только с локальной `iapteca`/`rs0`, сохраняет существующие данные и не пополняет остатки при повторном запуске. Составы и склад описаны в [docs/bundles.md](docs/bundles.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+После запуска приложения интеграционная проверка аптечек: `node scripts/test-local-bundle-orders.mjs`. Она создаёт уникальные временные записи, проверяет покупки/отмену/параллельные запросы и удаляет только собственные тестовые данные.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+При ограниченной памяти тесты можно запускать последовательно: `pnpm test:run --maxWorkers=1`.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Не добавляйте локальные credentials, key files, базу данных или backup в Git.

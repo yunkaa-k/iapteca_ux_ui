@@ -1,39 +1,28 @@
 import { getAuthUser } from '@/lib/auth';
-import { connectDB, OrderModel } from '@/lib/db';
+import { connectDB, MedicationModel, OrderModel } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
-import { Order } from '@/lib/types';
-import { statusMap } from '@/lib/utils';
-import { Package } from 'lucide-react';
+import { ProfileAccount } from '@/components/ProfileAccount';
+import { AccountOrders, type AccountOrder } from '@/components/AccountOrders';
+import type { Medication, Order } from '@/lib/types';
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string; request?: string; order?: string }> }) {
+  const { tab, request, order } = await searchParams;
   const user = await getAuthUser();
   if (!user) redirect('/login');
   await connectDB();
-  const orders = (await OrderModel.find({ user: user._id }).sort({ createdAt: -1 }).lean()) as unknown as Order[];
-
-  return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
-      <h1 className="text-2xl font-bold">Профіль: {user.phone}</h1>
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold flex items-center gap-2"><Package className="w-5 h-5" /> Мої замовлення</h2>
-        {orders.length === 0 ? <p className="opacity-50">У вас ще немає замовлень</p> : (
-          <div className="border rounded-lg divide-y">
-            {orders.map((o) => {
-              const status = statusMap[o.status] || { label: o.status, variant: "outline" };
-              return (
-                <div key={o._id.toString()} className="p-4 flex justify-between items-center">
-                  <div>
-                    <div className="font-medium">Замовлення #{o._id.toString().slice(-6)}</div>
-                    <div className="text-sm opacity-70">{new Date(o.createdAt).toLocaleDateString()} — {o.total} ₴</div>
-                  </div>
-                  <Badge variant={status.variant}>{status.label}</Badge>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  const records = (await OrderModel.find({ user: user._id }).sort({ createdAt: -1 }).lean()) as unknown as Order[];
+  const ids = [...new Set(records.flatMap(order => order.items.map(item => item.medication)))];
+  const products = (ids.length ? await MedicationModel.find({ _id: { $in: ids } }).lean() : []) as unknown as Medication[];
+  const byId = new Map(products.map(product => [product._id.toString(), product]));
+  const orders: AccountOrder[] = records.map(order => ({
+    _id: order._id.toString(), user: user._id, total: order.total, status: order.status, checkout: order.checkout,
+    createdAt: new Date(order.createdAt).toISOString(),
+    items: order.items.map(item => {
+      const medication = byId.get(item.medication.toString());
+      return { _id: item.medication.toString(), kind: item.kind, slug: item.slug, name: item.name || medication?.name || 'Препарат', description: item.description || medication?.description || '', manufacturer: medication?.manufacturer || '', category: medication?.category || '', stock: medication?.stock || 0, image: item.image || medication?.image, price: item.price, quantity: item.quantity };
+    }),
+  }));
+  return <ProfileAccount key={order || request || tab || 'profile'} user={user} initialOrders={tab === 'orders' || !!request || !!order} requestDetails={!!request && !order} orderDetails={!!order}>
+    <AccountOrders ownerId={user._id} orders={orders} requestId={request} orderId={order} />
+  </ProfileAccount>;
 }

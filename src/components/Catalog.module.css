@@ -1,0 +1,75 @@
+.page { width: min(1240px, calc(100% - 48px)); min-height: 1050px; margin-inline: auto; padding-block: 40px 64px; }
+.breadcrumbs { display: flex; align-items: center; gap: 8px; color: var(--iapteca-text-secondary); font-size: 13px; line-height: 18px; margin-bottom: 16px; }
+.breadcrumbs a:hover { color: var(--iapteca-primary); }
+.heading { margin-bottom: 24px; }
+.heading h1 { margin: 0 0 8px; font-size: 32px; line-height: 40px; font-weight: 700; color: var(--iapteca-heading); }
+.heading p { margin: 0; color: var(--iapteca-text-secondary); font-size: 16px; line-height: 24px; }
+.searchRow { width: min(925px, 100%); margin-bottom: 24px; }
+.layout { display: grid; grid-template-columns: 295px minmax(0, 1fr); gap: 20px; align-items: start; }
+.sidebar { display: flex; flex-direction: column; gap: 16px; padding: 24px; border: 1px solid var(--iapteca-border); border-radius: 16px; background: var(--iapteca-surface); }
+.filterHeading { display: flex; min-height: 40px; justify-content: space-between; align-items: center; gap: 12px; }
+.filterHeading h2 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 600; color: var(--iapteca-heading); }
+.textButton { color: var(--iapteca-primary); font: inherit; font-size: 14px; cursor: pointer; }
+.textButton:hover:not(:disabled) { text-decoration: underline; }
+.textButton:disabled { opacity: .5; cursor: default; }
+.group { display: flex; min-width: 0; flex-direction: column; gap: 8px; padding: 0; margin: 0; border: 0; }
+.group > label:not(.checkRow), .group > h3, .group legend { padding: 0; margin: 0; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--iapteca-heading); }
+.group legend { margin-bottom: 8px; font-weight: 600; color: var(--iapteca-text); }
+.group:has(legend) { display: block; }
+.select { width: 100%; min-height: 40px; border: 1px solid var(--iapteca-border); border-radius: 8px; background: #fff; color: var(--iapteca-text); box-shadow: none; font-size: 14px; }
+.checkRow { display: flex; min-height: 36px; align-items: center; gap: 10px; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--iapteca-text); cursor: pointer; }
+.checkRow > button { flex: 0 0 20px; width: 20px; height: 20px; border-radius: 4px; }
+.priceFilter { display: flex; min-height: 72px; flex-direction: column; justify-content: space-between; }
+.priceInputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.priceField { display: flex; min-width: 0; height: 28px; align-items: center; gap: 4px; padding-inline: 8px; border: 1px solid var(--iapteca-border); border-radius: 6px; background: var(--iapteca-surface); color: var(--iapteca-heading); font-size: 12px; line-height: 16px; }
+.priceField > span:first-child { color: var(--iapteca-text-secondary); font-size: 11px; }
+.priceField input { width: 100%; min-width: 0; height: 26px; padding: 0; border: 0; border-radius: 0; background: transparent; font: inherit; box-shadow: none; appearance: textfield; }
+.priceField input::-webkit-inner-spin-button, .priceField input::-webkit-outer-spin-button { margin: 0; appearance: none; }
+.priceField:focus-within { outline: 2px solid var(--iapteca-primary); outline-offset: 2px; }
+.priceField input:focus-visible { outline: none; box-shadow: none; }
+.range { position: relative; display: flex; width: calc(100% - 16px); height: 24px; align-items: center; margin-inline: 8px; touch-action: none; user-select: none; cursor: pointer; }
+.rangeTrack { position: relative; flex: 1; height: 4px; border-radius: 2px; background: var(--iapteca-border); }
+.rangeSelected { position: absolute; height: 100%; border-radius: inherit; background: var(--iapteca-primary); }
+.rangeThumb { display: block; width: 16px; height: 16px; border: 1px solid var(--iapteca-border); border-radius: 50%; background: var(--iapteca-surface); }
+.rangeThumb[aria-label="Верхня межа ціни"] { border-color: var(--iapteca-primary); background: var(--iapteca-primary); }
+.rangeThumb:focus-visible { outline: 3px solid var(--iapteca-primary); outline-offset: 3px; }
+.range[data-disabled] { opacity: .5; cursor: default; }
+.error { color: var(--iapteca-error-ink); font-size: 13px; line-height: 18px; margin: 4px 0 0; }
+.advanced { border: 1px solid var(--iapteca-border); border-radius: 10px; background: #fff; }
+.advanced summary { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px; color: var(--iapteca-text); font-size: 14px; line-height: 20px; font-weight: 400; list-style: none; cursor: pointer; }
+.advanced summary::-webkit-details-marker { display: none; }
+.advanced summary::marker { content: ''; }
+.advanced summary > svg { color: var(--iapteca-muted); flex-shrink: 0; }
+.advancedChevron { margin-left: auto; }
+.advancedContent { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
+.advancedContent .checkRow { gap: 12px; padding: 4px 8px; }
+.advancedContent legend { line-height: 18px; }
+.hint { margin: 0; color: var(--iapteca-muted); font-size: 12px; line-height: 18px; }
+.main { min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.search { display: flex; width: 100%; height: 52px; align-items: center; gap: 12px; padding: 4px 4px 4px 24px; border: 1px solid var(--iapteca-border); border-radius: 12px; background: #fff; }
+.search img { flex: 0 0 20px; }
+.search input { width: 100%; min-width: 0; flex: 1; background: transparent; border: 0; outline: 0; font: inherit; font-size: 16px; color: var(--iapteca-text); }
+.search input::placeholder { color: var(--iapteca-muted); }
+.search:focus-within { outline: 3px solid rgb(0 86 210 / 20%); border-color: var(--iapteca-primary); }
+.primaryButton { display: inline-flex; min-width: 112px; min-height: 44px; align-items: center; justify-content: center; padding: 10px 20px; border: 0; border-radius: 10px; background: var(--iapteca-primary); color: #fff; font: inherit; font-size: 16px; line-height: 24px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.primaryButton:hover:not(:disabled) { background: var(--iapteca-primary-hover); }
+.primaryButton:disabled { opacity: .5; cursor: wait; }
+.resultsHeading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.resultsHeading h2 { margin: 0; color: var(--iapteca-heading); font-size: 24px; line-height: 32px; font-weight: 600; }
+.resultsHeading p { margin: 4px 0 0; color: var(--iapteca-muted); font-size: 14px; line-height: 20px; }
+.sort { width: 295px; flex: 0 0 295px; }
+.sort .select { height: 44px; font-size: 13px; }
+.sortMenu { z-index: 60; width: var(--radix-select-trigger-width); padding: 4px; border: 1px solid var(--iapteca-border); border-radius: 8px; background: var(--iapteca-surface); box-shadow: 0 6px 10px rgb(18 41 69 / 12%); }
+.sortOption { display: flex; height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding-inline: 12px; font-size: 13px; color: var(--iapteca-text); cursor: pointer; outline: none; }
+.sortOption[data-highlighted] { background: var(--secondary); border-radius: 4px; }
+.sortOption img { flex-shrink: 0; }
+.products { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; min-height: 40px; max-width: 100%; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--iapteca-border); border-radius: 10px; background: #ebf2ff; color: var(--iapteca-heading); font-size: 14px; line-height: 20px; text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.chip span { color: var(--iapteca-text-secondary); font-size: 20px; }
+.empty { display: flex; min-height: 288px; align-items: center; justify-content: center; flex-direction: column; gap: 16px; padding: 40px; border: 1px solid var(--iapteca-border); border-radius: 16px; background: #fff; text-align: center; }
+.emptyIcon { display: grid; width: 48px; height: 48px; place-items: center; background: #ebf2ff; border-radius: 50%; }
+.empty h2 { margin: 0; font-size: 24px; line-height: 32px; color: var(--iapteca-heading); font-weight: 600; }
+.empty p { margin: 0; color: var(--iapteca-text-secondary); font-size: 16px; line-height: 24px; }
+.disclaimer { margin: 0; color: var(--iapteca-muted); font-size: 13px; line-height: 20px; text-align: center; }
+.textButton:focus-visible, .advanced summary:focus-visible, .primaryButton:focus-visible, .chip:focus-visible, .range:focus-visible, .breadcrumbs a:focus-visible { outline: 3px solid var(--iapteca-primary); outline-offset: 3px; }

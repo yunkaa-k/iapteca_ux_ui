@@ -1,18 +1,15 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from '@/components/Header';
 import { AuthProvider } from '@/components/AuthProvider';
+import { Footer } from '@/components/Footer';
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  display: 'swap',
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
+const manrope = localFont({
+  src: "./fonts/Manrope-Variable.ttf",
+  variable: "--font-iapteca",
+  weight: "400 700",
+  style: "normal",
   display: 'swap',
 });
 
@@ -27,11 +24,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="uk" className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
+    <html lang="uk" className={manrope.variable}>
       <body className="antialiased">
         <AuthProvider>
           <Header />
-          <main>{children}</main>
+          <a className="skipLink" href="#main-content">Перейти до основного вмісту</a>
+          <main id="main-content">{children}</main>
+          <Footer />
           <Toaster />
         </AuthProvider>
       </body>

@@ -5,7 +5,8 @@ import { getAuthUser } from '@/lib/auth';
 export async function GET(req: Request) {
   await connectDB();
   const { searchParams } = new URL(req.url);
-  const filter: Record<string, unknown> = { isDeleted: { $ne: true } };
+  const includeInventory = searchParams.get('inventory') === 'true' && (await getAuthUser())?.role === 'ADMIN';
+  const filter: Record<string, unknown> = { isDeleted: { $ne: true }, ...(includeInventory ? {} : { inventoryOnly: { $ne: true } }) };
   
   const search = searchParams.get('search');
   if (search) filter.name = { $regex: search, $options: 'i' };

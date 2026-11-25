@@ -14,12 +14,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   setUser: (user) => set({ user, isLoading: false }),
   logout: async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    const response = await fetch('/api/auth/logout', { method: 'POST' });
+    if (!response.ok) throw new Error('Не вдалося вийти. Спробуйте ще раз.');
     set({ user: null });
   },
   fetchUser: async () => {
     try {
       const res = await fetch('/api/auth/me');
+      if (!res.ok) throw new Error('Session unavailable');
       const data = await res.json();
       set({ user: data.user, isLoading: false });
     } catch {

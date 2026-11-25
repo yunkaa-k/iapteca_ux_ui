@@ -1,0 +1,61 @@
+.overlay[data-slot] {
+  z-index: 70;
+  background: rgb(16 37 65 / 42%);
+  backdrop-filter: none;
+}
+
+.dialog {
+  position: fixed;
+  z-index: 71;
+  top: calc(50% - 50px);
+  left: 50%;
+  display: flex;
+  width: 600px;
+  max-width: calc(100% - 32px);
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--iapteca-border);
+  border-radius: 16px;
+  background: var(--iapteca-surface);
+}
+
+.title {
+  margin: 0;
+  color: var(--iapteca-heading);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.description {
+  margin: 0;
+  color: var(--iapteca-muted);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.actions { display: flex; gap: 16px; }
+.actions button {
+  display: flex;
+  height: 48px;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+  cursor: pointer;
+}
+.stay { border: 1px solid var(--iapteca-border); background: var(--secondary); color: var(--iapteca-primary); }
+.confirm { background: var(--iapteca-error-ink); color: white; }
+.stay:hover:not(:disabled) { background: #dce8ff; }
+.confirm:hover:not(:disabled) { background: #991b1b; }
+.actions button:focus-visible { outline: 3px solid var(--iapteca-primary); outline-offset: 0; }
+.actions button:disabled { opacity: .6; cursor: wait; }
+.error { margin: 0; color: var(--iapteca-error-ink); font-size: 14px; line-height: 20px; }

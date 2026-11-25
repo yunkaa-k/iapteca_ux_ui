@@ -1,0 +1,178 @@
+.header {
+  position: sticky;
+  z-index: 50;
+  top: 0;
+  width: 100%;
+  height: 70px;
+  background: #fff;
+}
+
+.inner {
+  display: flex;
+  width: min(1240px, calc(100% - 48px));
+  height: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-inline: auto;
+}
+
+.brandAndNav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 40px;
+}
+
+.brand {
+  display: inline-flex;
+  flex: 0 0 132px;
+  align-items: center;
+  gap: 8px;
+  color: #0a2b63;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 30px;
+  text-decoration: none;
+}
+
+.brand img {
+  flex: 0 0 30px;
+}
+
+.navigation {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 40px;
+  white-space: nowrap;
+}
+
+.navigation a {
+  color: var(--iapteca-text);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.navigation a:hover, .navigation a[aria-current="page"] {
+  color: var(--iapteca-primary);
+}
+
+.actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.iconButton {
+  display: inline-flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.iconButton:hover {
+  background: #f4f7f9;
+}
+
+.cartButton {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 20px;
+  background: #ebf1ff;
+  color: var(--iapteca-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.cartButton:hover {
+  background: #dce8ff;
+}
+
+.cartIcon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+}
+
+.cartIcon img {
+  position: absolute;
+  left: 1.25px;
+  top: 4px;
+}
+
+.cartCount {
+  display: inline-flex;
+  min-width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 6px;
+  border-radius: 16px;
+  background: var(--iapteca-primary);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.languageButton {
+  display: inline-flex;
+  width: 80px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-left: 0;
+  padding: 8px 12px;
+  border: 1px solid #f2f4f7;
+  border-radius: 10px;
+  background: #fff;
+  color: #333;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: default;
+}
+
+.iconButton:focus-visible,
+.cartButton:focus-visible,
+.languageButton:focus-visible,
+.brand:focus-visible,
+.navigation a:focus-visible {
+  outline: 3px solid rgb(0 86 210 / 35%);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1100px) {
+  .inner {
+    gap: 18px;
+  }
+
+  .brandAndNav {
+    gap: 24px;
+  }
+
+  .navigation {
+    gap: 18px;
+  }
+}

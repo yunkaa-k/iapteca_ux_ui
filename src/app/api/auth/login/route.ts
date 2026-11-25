@@ -2,33 +2,30 @@ import { NextResponse } from 'next/server';
 import { connectDB, UserModel } from '@/lib/db';
 import bcrypt from 'bcrypt';
 import { setAuthCookie } from '@/lib/auth';
+import { normalizeEmail, validEmail } from '@/lib/authValidation';
 import { logger } from '@/lib/logger';
-import { metrics } from '@/lib/metrics';
 
 export async function POST(req: Request) {
-  const startTime = Date.now();
-  metrics.incrementCounter('http_requests_total', { method: 'POST', path: '/api/auth/login' });
-
   try {
+    const origin = req.headers.get('origin');
+    if (origin && origin !== new URL(req.url).origin) return NextResponse.json({ error: 'Недозволений запит.' }, { status: 403 });
+    const body = await req.json();
+    const email = typeof body.email === 'string' ? normalizeEmail(body.email) : '';
+    const password = typeof body.password === 'string' ? body.password : '';
+    if (!validEmail(email) || !password || Buffer.byteLength(password) > 72) {
+      return NextResponse.json({ error: 'Перевірте введені дані.' }, { status: 400 });
+    }
     await connectDB();
-    const { phone, password } = await req.json();
-    const user = await UserModel.findOne({ phone });
+    const user = await UserModel.findOne({ email });
     if (!user || user.isBanned || !(await bcrypt.compare(password, user.password))) {
-      logger.warn('user.login_failed', { phone, ip: req.headers.get('x-forwarded-for') || 'unknown' });
-      metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/auth/login' });
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json({ error: 'Неправильна електронна пошта або пароль.' }, { status: 401 });
     }
     await setAuthCookie(user._id.toString());
-    
-    logger.info('user.login', { user_id: user._id.toString(), ip: req.headers.get('x-forwarded-for') || 'unknown' });
-    metrics.incrementGauge('active_user_sessions');
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/auth/login' });
-    
-    return NextResponse.json({ user: { id: user._id, phone: user.phone, role: user.role, name: user.name } });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('user.login_error', { error_message: errorMessage });
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/auth/login' });
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 });
+    logger.info('user.login', { user_id: user._id.toString() });
+    return NextResponse.json({ user: { _id: user._id.toString(), phone: user.phone, email: user.email, role: user.role, name: user.name, isBanned: false } });
+  } catch (error) {
+    if (error instanceof SyntaxError || error instanceof TypeError) return NextResponse.json({ error: 'Некоректний запит.' }, { status: 400 });
+    logger.error('user.login_error', { error_name: error instanceof Error ? error.name : 'UnknownError' });
+    return NextResponse.json({ error: 'Не вдалося увійти. Спробуйте пізніше.' }, { status: 500 });
   }
 }

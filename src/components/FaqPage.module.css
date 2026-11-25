@@ -1,0 +1,17 @@
+.page { width: min(1240px, calc(100% - 48px)); margin-inline: auto; padding-block: 40px 48px; display: flex; flex-direction: column; gap: 32px; }
+.breadcrumbs { display: flex; gap: 3px; color: var(--iapteca-muted); font-size: 14px; line-height: normal; font-weight: 400; }
+.breadcrumbs a:hover { color: var(--iapteca-primary); }
+.heading { display: flex; flex-direction: column; gap: 8px; }
+.heading h1 { margin: 0; color: var(--iapteca-heading); font-size: 32px; font-weight: 700; line-height: normal; }
+.heading p { margin: 0; color: var(--iapteca-muted); font-size: 16px; font-weight: 500; line-height: 1.4; }
+.questions { display: flex; flex-direction: column; gap: 16px; }
+.item { overflow: hidden; border: 1px solid var(--iapteca-border); border-radius: 16px; background: var(--iapteca-surface); }
+.item h2 { margin: 0; }
+.toggle { width: 100%; display: flex; align-items: center; gap: 16px; padding: 24px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.question { flex: 1; min-width: 0; color: var(--iapteca-heading); font-size: 20px; line-height: 28px; font-weight: 600; overflow-wrap: break-word; }
+.action { display: flex; align-items: center; gap: 4px; flex-shrink: 0; color: var(--iapteca-primary); font-size: 14px; line-height: 20px; font-weight: 600; }
+.action img { flex-shrink: 0; }
+.answer { padding: 0 24px 24px; }
+.answer p { margin: 0; color: var(--iapteca-muted); font-size: 16px; font-weight: 500; line-height: 1.4; overflow-wrap: break-word; }
+.toggle:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: -4px; border-radius: 14px; }
+.breadcrumbs a:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 3px; }

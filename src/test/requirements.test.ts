@@ -99,7 +99,7 @@ describe('iApteca Requirements Tests', () => {
 
         const req = new Request('http://localhost/api/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ phone: '+380630000000', password: 'SuperSecret123', name: 'John' }),
+            body: JSON.stringify({ email: 'test@example.test', password: 'SuperSecret123', name: 'Test', consent: true }),
         });
 
         await registerPost(req);
@@ -113,7 +113,7 @@ describe('iApteca Requirements Tests', () => {
     it('Тест 3: Замовлення створюється зі статусом PENDING', async () => {
         (getAuthUser as Mock).mockResolvedValue({ _id: 'user123', role: 'CUSTOMER' });
 
-        (MedicationModel.findOneAndUpdate as Mock).mockResolvedValue({ _id: 'med1', name: 'Товар 1', stock: 10 });
+        (MedicationModel.findOneAndUpdate as Mock).mockResolvedValue({ _id: 'med1', name: 'Товар 1', stock: 10, price: 100 });
         const orderData = {
             items: [
                 { medication: 'med1', quantity: 1, price: 100 },

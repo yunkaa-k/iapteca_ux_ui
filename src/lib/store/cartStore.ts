@@ -23,7 +23,7 @@ export const useCartStore = create<CartState>()(
         const exists = items.find((i) => i._id === med._id);
         if (exists) {
           if (exists.quantity < med.stock) {
-            set({ items: items.map((i) => i._id === med._id ? { ...i, quantity: i.quantity + 1 } : i) });
+            set({ items: items.map((i) => i._id === med._id ? { ...med, quantity: i.quantity + 1 } : i) });
           }
         } else if (med.stock > 0) {
           set({ items: [...items, { ...med, quantity: 1 }] });

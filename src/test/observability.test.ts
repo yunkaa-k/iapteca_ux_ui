@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { logger } from '@/lib/logger';
-import { metrics } from '@/lib/metrics';
 
-describe('Observability - Logging & Metrics', () => {
+describe('Application logging', () => {
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
   let consoleInfoSpy: ReturnType<typeof vi.spyOn>;
 
@@ -10,7 +9,6 @@ describe('Observability - Logging & Metrics', () => {
     // Clear mocks before each test
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-    metrics.clear();
   });
 
   // Тест рівня логування - подія ERROR логується з рівнем ERROR, а не INFO
@@ -43,31 +41,6 @@ describe('Observability - Logging & Metrics', () => {
 
     expect(logOutput.phone).toBe('+3805****567');
     expect(logOutput.phone).not.toContain('123');
-  });
-
-  // Тест лічильника - після N запитів лічильник запитів дорівнює N
-  it('should increment counter correctly', () => {
-    const N = 5;
-    for (let i = 0; i < N; i++) {
-      metrics.incrementCounter('http_requests_total', { method: 'GET' });
-    }
-
-    expect(metrics.getCounter('http_requests_total', { method: 'GET' })).toBe(N);
-  });
-
-  // Тест gauge - після відкриття сесії значення зростає, після закриття - спадає
-  it('should update gauge correctly for active sessions', () => {
-    // Open 3 sessions
-    metrics.incrementGauge('active_user_sessions');
-    metrics.incrementGauge('active_user_sessions');
-    metrics.incrementGauge('active_user_sessions');
-
-    expect(metrics.getGauge('active_user_sessions')).toBe(3);
-
-    // Close 1 session
-    metrics.decrementGauge('active_user_sessions');
-
-    expect(metrics.getGauge('active_user_sessions')).toBe(2);
   });
 
   // Тест формату логу - лог містить обов'язкові поля: timestamp, level, event

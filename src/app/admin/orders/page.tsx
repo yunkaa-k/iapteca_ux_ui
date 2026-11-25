@@ -16,19 +16,21 @@ export default function OrdersAdmin() {
   const upStat = async (id: string, status: string) => {
     const res = await fetch(`/api/orders/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
     if (res.ok) { toast.success('Статус оновлено'); load(); }
+    else { const data = await res.json().catch(() => ({})); toast.error(data.error || 'Не вдалося оновити статус'); }
   };
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold flex items-center gap-2"><ClipboardList className="w-6 h-6" /> Замовлення</h1>
       <Table>
-        <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Сума</TableHead><TableHead>Статус</TableHead><TableHead>Дія</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>ID</TableHead><TableHead>Покупець</TableHead><TableHead>Сума</TableHead><TableHead>Статус</TableHead><TableHead>Дія</TableHead></TableRow></TableHeader>
         <TableBody>
           {orders.map(o => {
             const status = statusMap[o.status] || { label: o.status, variant: "outline" };
             return (
               <TableRow key={o._id}>
                 <TableCell className="font-mono text-xs">#{o._id.slice(-6)}</TableCell>
+                <TableCell><div>{o.checkout?.contact.name || 'Не вказано'}{!o.user && ' · Гість'}</div><div className="text-xs text-muted-foreground">{o.checkout?.contact.phone}</div></TableCell>
                 <TableCell>{o.total} ₴</TableCell>
                 <TableCell><Badge variant={status.variant}>{status.label}</Badge></TableCell>
                 <TableCell>

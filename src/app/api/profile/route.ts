@@ -4,12 +4,25 @@ import { getAuthUser } from '@/lib/auth';
 
 export async function PUT(req: Request) {
   try {
+    if (req.headers.get('origin') && req.headers.get('origin') !== new URL(req.url).origin) return NextResponse.json({ error: 'Недозволений запит.' }, { status: 403 });
     const user = await getAuthUser();
     if (!user) return NextResponse.json({ error: 'Auth' }, { status: 401 });
     await connectDB();
-    const { name } = await req.json();
-    return NextResponse.json(await UserModel.findByIdAndUpdate(user._id, { name }, { new: true }));
-  } catch {
+    const body = await req.json();
+    const structured = body?.firstName !== undefined || body?.lastName !== undefined;
+    const firstName = typeof body?.firstName === 'string' ? body.firstName.trim() : '';
+    const lastName = typeof body?.lastName === 'string' ? body.lastName.trim() : '';
+    if (structured && (!firstName || !lastName)) return NextResponse.json({ error: 'Укажіть ім’я та прізвище.' }, { status: 400 });
+    const name = structured ? firstName + ' ' + lastName : typeof body?.name === 'string' ? body.name.trim() : '';
+    const phone = typeof body?.phone === 'string' ? body.phone.replace(/[\s()-]/g, '') : '';
+    if (!name || name.length > 100 || (phone && !/^\+380\d{9}$/.test(phone))) return NextResponse.json({ error: 'Укажіть ім’я (до 100 символів) та коректний номер +380XXXXXXXXX.' }, { status: 400 });
+    const unset = { ...(!phone ? { phone: 1 } : {}), ...(!structured ? { firstName: 1, lastName: 1 } : {}) };
+    const updated = await UserModel.findByIdAndUpdate(user._id, { $set: { name, ...(structured ? { firstName, lastName } : {}), ...(phone ? { phone } : {}) }, ...(Object.keys(unset).length ? { $unset: unset } : {}) }, { new: true, runValidators: true }).select('_id name firstName lastName phone email role isBanned').lean();
+    if (!updated) return NextResponse.json({ error: 'Користувача не знайдено.' }, { status: 404 });
+    return NextResponse.json({ user: { ...updated, _id: updated._id.toString() } });
+  } catch (error) {
+    if (error instanceof SyntaxError || error instanceof TypeError) return NextResponse.json({ error: 'Некоректний запит.' }, { status: 400 });
+    if (typeof error === 'object' && error && 'code' in error && error.code === 11000) return NextResponse.json({ error: 'Цей номер телефону вже використовується.' }, { status: 409 });
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }

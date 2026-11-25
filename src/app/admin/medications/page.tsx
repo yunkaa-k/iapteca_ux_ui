@@ -18,7 +18,7 @@ export default function MedsAdmin() {
   const [open, setOpen] = useState(false);
 
   const load = () => {
-    fetch('/api/medications').then(res => res.json()).then(setMeds);
+    fetch('/api/medications?inventory=true&limit=1000').then(res => res.json()).then(setMeds);
     fetch('/api/categories').then(res => res.json()).then(setCats);
   };
   useEffect(() => { load(); }, []);

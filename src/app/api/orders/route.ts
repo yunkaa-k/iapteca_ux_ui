@@ -1,18 +1,25 @@
 import { NextResponse } from 'next/server';
-import { connectDB, OrderModel, MedicationModel, PromoCodeModel } from '@/lib/db';
+import { connectDB, OrderModel, MedicationModel, BundleModel } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import mongoose from 'mongoose';
 import { logger } from '@/lib/logger';
-import { metrics } from '@/lib/metrics';
-import { calculateDiscount } from '@/lib/promo';
+import type { Order, OrderItem } from '@/lib/types';
+import { isDemoPickupUnavailable, parseCheckout } from '@/lib/checkout';
+import { createHash, randomBytes } from 'node:crypto';
+
+const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
+
+function orderResponse(order: Order & { toObject?: () => Order }, guestPaymentToken?: string) {
+  const publicOrder = typeof order.toObject === 'function' ? order.toObject() : { ...order };
+  delete publicOrder.guestPaymentTokenHash;
+  delete publicOrder.submissionHash;
+  return NextResponse.json({ ...publicOrder, ...(guestPaymentToken ? { guestPaymentToken } : {}) });
+}
 
 export async function GET(req: Request) {
-  const startTime = Date.now();
-  metrics.incrementCounter('http_requests_total', { method: 'GET', path: '/api/orders' });
 
   const user = await getAuthUser();
   if (!user) {
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
     return NextResponse.json({ error: 'Auth' }, { status: 401 });
   }
   await connectDB();
@@ -20,192 +27,135 @@ export async function GET(req: Request) {
   const filter = user.role === 'ADMIN' && searchParams.get('admin') ? {} : { user: user._id };
   const orders = await OrderModel.find(filter).sort({ createdAt: -1 });
 
-  metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
   return NextResponse.json(orders);
 }
 
-/**
- * Валідує промокод і повертає дані для знижки.
- * Повертає null, якщо промокод не вказано.
- * Кидає Error, якщо промокод недійсний.
- */
-async function validatePromoCode(promoCodeStr: string | undefined, subtotal: number, session?: mongoose.ClientSession) {
-  if (!promoCodeStr) return null;
-
-  const code = promoCodeStr.toUpperCase().trim();
-  const query = PromoCodeModel.findOne({ code });
-  const promo = session ? await query.session(session) : await query;
-
-  if (!promo) throw new Error('Промокод не знайдено');
-  if (!promo.isActive) throw new Error('Промокод неактивний');
-  if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) throw new Error('Термін дії промокоду закінчився');
-  if (promo.maxUses > 0 && promo.usedCount >= promo.maxUses) throw new Error('Ліміт використань вичерпано');
-  if (subtotal < promo.minOrderTotal) throw new Error(`Мінімальна сума замовлення: ${promo.minOrderTotal} ₴`);
-
-  const { discount, finalTotal } = calculateDiscount(subtotal, promo.discountType, promo.discountValue, promo.minOrderTotal);
-
-  return { code, discount, finalTotal, promoId: promo._id };
-}
-
 export async function POST(req: Request) {
-  const startTime = Date.now();
-  metrics.incrementCounter('http_requests_total', { method: 'POST', path: '/api/orders' });
-
   const user = await getAuthUser();
-  if (!user) {
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
-    return NextResponse.json({ error: 'Auth' }, { status: 401 });
+  let body: Record<string, unknown>;
+  try { body = await req.json(); } catch { return NextResponse.json({ error: 'Невірний формат замовлення.' }, { status: 400 }); }
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Невірний формат замовлення.' }, { status: 400 });
+  if (!user && !body.checkout) return NextResponse.json({ error: 'Auth' }, { status: 401 });
+  const origin = req.headers.get('origin');
+  if (origin && origin !== new URL(req.url).origin) return NextResponse.json({ error: 'Недозволений запит.' }, { status: 403 });
+  const submissionKey = req.headers.get('Idempotency-Key');
+  if (submissionKey !== null && !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(submissionKey)) {
+    return NextResponse.json({ error: 'Некоректний ключ оформлення замовлення.' }, { status: 400 });
   }
-
+  const parsed = body.checkout === undefined ? {} : parseCheckout(body.checkout);
+  if (parsed.errors) return NextResponse.json({ error: 'Перевірте обов’язкові поля та спосіб отримання.', fields: parsed.errors }, { status: 400 });
+  if (!Array.isArray(body.items) || body.items.length === 0 || body.items.length > 100) return NextResponse.json({ error: 'Кошик порожній або містить забагато позицій.' }, { status: 400 });
+  const quantities = new Map<string, number>();
+  for (const item of body.items) {
+    if (!item || (item.kind !== undefined && item.kind !== 'bundle') || typeof item.medication !== 'string' || !item.medication || item.medication.length > 128 || !Number.isSafeInteger(item.quantity) || item.quantity < 1 || item.quantity > 1000) return NextResponse.json({ error: 'Некоректна кількість товару.' }, { status: 400 });
+    const key = item.kind === 'bundle' ? 'bundle:' + item.medication : item.medication;
+    const quantity = (quantities.get(key) || 0) + item.quantity;
+    if (quantity > 1000) return NextResponse.json({ error: 'Некоректна кількість товару.' }, { status: 400 });
+    quantities.set(key, quantity);
+  }
+  const orderedQuantities = [...quantities].sort(([a], [b]) => a.localeCompare(b));
+  // Reuse MongoDB's unique _id index so simultaneous attempts cannot both commit.
+  const orderId = submissionKey ? sha256('order:' + submissionKey).slice(0, 24) : undefined;
+  const submissionHash = submissionKey ? sha256(JSON.stringify([submissionKey, orderedQuantities, parsed.details])) : undefined;
   await connectDB();
-
-  const { items, total, promoCode: promoCodeStr } = await req.json();
-  const MAX_RETRIES = 50;
-  let retryCount = 0;
-
-  if (items && items.length === 1) {
-    while (retryCount < MAX_RETRIES) {
-      try {
-        const item = items[0];
-        const med = await MedicationModel.findOneAndUpdate(
-          { _id: item.medication, stock: { $gte: item.quantity } },
-          { $inc: { stock: -item.quantity } },
-          { new: true }
-        );
-
-        if (!med) throw new Error('Недостатньо товару');
-
-        // Валідація промокоду
-        const promoResult = await validatePromoCode(promoCodeStr, total);
-
-        const orderData: Record<string, unknown> = {
-          user: user._id,
-          items,
-          total: promoResult ? promoResult.finalTotal : total,
-          status: 'PENDING',
-        };
-
-        if (promoResult) {
-          orderData.promoCode = promoResult.code;
-          orderData.discount = promoResult.discount;
-          await PromoCodeModel.findByIdAndUpdate(promoResult.promoId, { $inc: { usedCount: 1 } });
-        }
-
-        const order = await OrderModel.create(orderData);
-
-        logger.info('order.created', { user_id: user._id.toString(), order_id: order._id.toString(), total: orderData.total as number, promo: promoResult?.code });
-        metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
-        return NextResponse.json(order);
-      } catch (error: unknown) {
-        let isRetryable = false;
-        if (error && typeof error === 'object') {
-          const errCode = (error as Record<string, unknown>).code;
-          const errMsg = (error as Error).message;
-          isRetryable = errCode === 112 || errMsg?.includes('Write conflict') || errCode === 11000;
-        }
-
-        if (isRetryable && retryCount < MAX_RETRIES - 1) {
-          retryCount++;
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 100 * retryCount));
-          continue;
-        }
-        const message = error instanceof Error ? error.message : 'Failed';
-        logger.error('order.creation_failed', { user_id: user._id.toString(), error_message: message });
-        return NextResponse.json({ error: message }, { status: 400 });
-      }
-    }
-  }
-
-  while (retryCount < MAX_RETRIES) {
+  const guestPaymentToken = !user && parsed.details?.payment === 'online'
+    ? submissionKey ? sha256('guest-payment:' + submissionKey) : randomBytes(32).toString('hex')
+    : undefined;
+  for (let attempt = 0; attempt < 5; attempt++) {
     const session = await mongoose.startSession();
     session.startTransaction();
-
+    let committing = false;
     try {
-      if (!items || items.length === 0) {
-        throw new Error('Кошик порожній');
-      }
-
-      for (const item of items) {
-        const med = await MedicationModel.findOneAndUpdate(
-          { _id: item.medication, stock: { $gte: item.quantity } },
-          { $inc: { stock: -item.quantity } },
-          { session, new: true }
-        );
-
-        if (!med) throw new Error('Недостатньо товару');
-      }
-
-      // Валідація промокоду у транзакції
-      const promoResult = await validatePromoCode(promoCodeStr, total, session);
-
-      const orderData: Record<string, unknown> = {
-        user: user._id,
-        items,
-        total: promoResult ? promoResult.finalTotal : total,
-        status: 'PENDING',
-      };
-
-      if (promoResult) {
-        orderData.promoCode = promoResult.code;
-        orderData.discount = promoResult.discount;
-        await PromoCodeModel.findByIdAndUpdate(promoResult.promoId, { $inc: { usedCount: 1 } }).session(session);
-      }
-
-      const order = await OrderModel.create([orderData], { session });
-
-      await session.commitTransaction();
-      session.endSession();
-
-      logger.info('order.created', { user_id: user._id.toString(), order_id: order[0]._id.toString(), total: orderData.total as number, promo: promoResult?.code });
-      metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
-      return NextResponse.json(order[0]);
-    } catch (error: unknown) {
-      await session.abortTransaction();
-      session.endSession();
-
-      let isWriteConflict = false;
-      if (error && typeof error === 'object') {
-        const errCode = (error as Record<string, unknown>).code;
-        const errMsg = (error as Error).message;
-
-        interface MongoError extends Error {
-          hasErrorLabel?: (label: string) => boolean;
+      if (orderId) {
+        const existing = await OrderModel.findById(orderId).select('+submissionHash').session(session);
+        if (existing) {
+          await session.abortTransaction();
+          if ((existing.user || undefined) !== user?._id.toString() || existing.submissionHash !== submissionHash) {
+            return NextResponse.json({ error: 'Цю спробу оформлення вже використано.' }, { status: 409 });
+          }
+          return orderResponse(existing, guestPaymentToken);
         }
-        const mongoErr = error as MongoError;
-        const isTransient = typeof mongoErr.hasErrorLabel === 'function' ? mongoErr.hasErrorLabel('TransientTransactionError') : false;
-
-        isWriteConflict = errCode === 112 || errMsg?.includes('Write conflict') || isTransient;
       }
-
-      if (isWriteConflict && retryCount < MAX_RETRIES - 1) {
-        retryCount++;
-        const delay = Math.min(1000, Math.pow(1.5, retryCount) * 20 + Math.random() * 100);
-        await new Promise(resolve => setTimeout(resolve, delay));
+      const items: OrderItem[] = [];
+      const pickupItems: Pick<OrderItem, 'kind' | 'slug' | 'name'>[] = [];
+      let subtotal = 0;
+      for (const [key, quantity] of orderedQuantities) {
+        if (key.startsWith('bundle:')) {
+          const medication = key.slice(7);
+          const bundle = await BundleModel.findOne({ _id: medication, isDeleted: { $ne: true }, compositionConfirmed: true }).session(session);
+          if (!bundle || !bundle.components.length || !Number.isFinite(bundle.price) || bundle.price < 0) throw new Error('Аптечка недоступна. Оновіть кошик.');
+          const required = new Map<string, number>();
+          for (const component of bundle.components) {
+            if (!Number.isSafeInteger(component.quantity) || component.quantity < 1) throw new Error('Аптечка недоступна. Оновіть кошик.');
+            const id = component.medication.toString();
+            required.set(id, (required.get(id) || 0) + component.quantity * quantity);
+          }
+          for (const [id, count] of [...required].sort(([a], [b]) => a.localeCompare(b))) {
+            if (!Number.isSafeInteger(count)) throw new Error('Аптечка недоступна. Оновіть кошик.');
+            const component = await MedicationModel.findOneAndUpdate({ _id: id, isDeleted: { $ne: true }, stock: { $gte: count } }, { $inc: { stock: -count } }, { session, new: true });
+            if (!component) throw new Error('Недостатньо компонентів аптечки. Оновіть кошик.');
+            if (component.requiresPrescription === true) throw new Error('Склад аптечки потребує окремого погодження.');
+          }
+          items.push({ medication, kind: 'bundle', quantity, price: bundle.price, name: bundle.name, description: bundle.description, image: bundle.image, slug: bundle.slug, components: bundle.components.map((c: { medication: string; quantity: number; name: string }) => ({ medication: c.medication.toString(), quantity: c.quantity, name: c.name })) });
+          pickupItems.push({ kind: 'bundle', slug: bundle.slug });
+          subtotal += Math.round(bundle.price * 100) * quantity;
+          continue;
+        }
+        const medication = key;
+        const med = await MedicationModel.findOneAndUpdate(
+          { _id: medication, isDeleted: { $ne: true }, inventoryOnly: { $ne: true }, stock: { $gte: quantity } },
+          { $inc: { stock: -quantity } }, { session, new: true }
+        );
+        if (!med) throw new Error('Недостатньо товару. Оновіть кошик і спробуйте ще раз.');
+        if (!user && med.requiresPrescription === true) throw new Error('Для рецептурних препаратів увійдіть і збережіть заявку на перевірку рецепта.');
+        if (!Number.isFinite(med.price) || med.price < 0) throw new Error('Не вдалося перевірити ціну товару.');
+        items.push({ medication, quantity, price: med.price });
+        pickupItems.push({ name: med.name });
+        subtotal += Math.round(med.price * 100) * quantity;
+      }
+      if (parsed.details?.delivery.method === 'pickup' && isDemoPickupUnavailable(pickupItems)) {
+        await session.abortTransaction();
+        return NextResponse.json({ error: 'Немає аптеки з усіма товарами. Оберіть доставку або змініть склад кошика.' }, { status: 400 });
+      }
+      subtotal /= 100;
+      const total = subtotal + (parsed.details?.delivery.fee || 0);
+      const [order] = await OrderModel.create([{ ...(orderId ? { _id: orderId, submissionHash } : {}), ...(user ? { user: user._id } : {}), ...(guestPaymentToken ? { guestPaymentTokenHash: sha256(guestPaymentToken) } : {}), items, subtotal, total, ...(parsed.details ? { checkout: parsed.details } : {}), status: 'PENDING' }], { session });
+      committing = true;
+      await session.commitTransaction();
+      logger.info('order.created', { order_id: order._id.toString(), total });
+      return orderResponse(order, guestPaymentToken);
+    } catch (error: unknown) {
+      if (!committing) await session.abortTransaction();
+      const err = error as Error & { code?: number; hasErrorLabel?: (label: string) => boolean };
+      const concurrentSubmission = Boolean(orderId) && (err.code === 11000 || err.hasErrorLabel?.('UnknownTransactionCommitResult'));
+      if ((concurrentSubmission || err.code === 112 || err.hasErrorLabel?.('TransientTransactionError')) && attempt < 4) {
+        await new Promise(resolve => setTimeout(resolve, 20 * (attempt + 1)));
         continue;
       }
-
-      const message = error instanceof Error ? error.message : 'Failed';
-      logger.error('order.creation_failed', { user_id: user._id.toString(), error_message: message });
-      metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
+      logger.error('order.creation_failed', { error_name: err.name });
+      const publicMessages = [
+        'Недостатньо товару. Оновіть кошик і спробуйте ще раз.',
+        'Для рецептурних препаратів увійдіть і збережіть заявку на перевірку рецепта.',
+        'Не вдалося перевірити ціну товару.',
+        'Аптечка недоступна. Оновіть кошик.',
+        'Недостатньо компонентів аптечки. Оновіть кошик.',
+        'Склад аптечки потребує окремого погодження.',
+      ];
+      return NextResponse.json({ error: publicMessages.includes(err.message) ? err.message : 'Не вдалося створити замовлення. Спробуйте ще раз.' }, { status: 400 });
+    } finally { await session.endSession(); }
   }
-  return NextResponse.json({ error: 'System busy' }, { status: 429 });
+  return NextResponse.json({ error: 'Спробуйте оформити замовлення ще раз.' }, { status: 429 });
 }
 
 export async function DELETE() {
-  const startTime = Date.now();
-  metrics.incrementCounter('http_requests_total', { method: 'DELETE', path: '/api/orders' });
 
   const user = await getAuthUser();
   if (!user) {
-    metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
     return NextResponse.json({ error: 'Auth' }, { status: 401 });
   }
 
   await connectDB();
   await OrderModel.deleteMany({ user: user._id });
 
-  metrics.observeHistogram('http_request_duration_ms', Date.now() - startTime, { path: '/api/orders' });
   return new NextResponse(null, { status: 204 });
 }

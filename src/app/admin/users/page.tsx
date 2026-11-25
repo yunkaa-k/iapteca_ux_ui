@@ -30,11 +30,11 @@ export default function UsersAdmin() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold flex items-center gap-2"><Users className="w-6 h-6" /> Користувачі</h1>
       <Table>
-        <TableHeader><TableRow><TableHead>Телефон</TableHead><TableHead>Ім&apos;я</TableHead><TableHead>Роль</TableHead><TableHead className="text-right">Дія</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Email / Телефон</TableHead><TableHead>Ім&apos;я</TableHead><TableHead>Роль</TableHead><TableHead className="text-right">Дія</TableHead></TableRow></TableHeader>
         <TableBody>
           {users.map(u => (
             <TableRow key={u._id}>
-              <TableCell>{u.phone.replace(/(\+\d{1,4})\d+(\d{4})$/, '$1****$2')}</TableCell>
+              <TableCell>{u.email || u.phone?.replace(/(\+\d{1,4})\d+(\d{4})$/, '$1****$2') || '—'}</TableCell>
               <TableCell>{u.name || '-'}</TableCell>
               <TableCell className="text-xs font-medium uppercase tracking-wider">{u.role}</TableCell>
               <TableCell className="text-right">

@@ -1,0 +1,517 @@
+.homePage {
+  background: var(--iapteca-background);
+  color: var(--iapteca-text);
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 600px;
+  overflow: hidden;
+  background: #ebf2ff;
+}
+
+.heroVisual {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: -2;
+  width: min(900px, 64%);
+  height: 100%;
+}
+
+.heroVisual img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.heroFade {
+  position: absolute;
+  z-index: -1;
+  inset: 0 auto 0 32.6%;
+  width: 14%;
+  pointer-events: none;
+  background: linear-gradient(90deg, #eaf4fd 0%, rgb(234 244 253 / 82%) 60%, rgb(234 244 253 / 0%) 100%);
+}
+
+.heroInner,
+.content {
+  width: min(1240px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 1;
+  min-height: 600px;
+  padding-top: 140px;
+}
+
+.heroContent {
+  width: min(760px, 62%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.heroIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.heroTitle {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--iapteca-heading);
+  font-size: 49px;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: 0;
+}
+
+.heroTitle span:last-child {
+  color: var(--iapteca-primary);
+}
+
+.heroDescription {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  color: var(--iapteca-text-secondary);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.heroDescription span:last-child {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+}
+
+.heroSearchGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.searchForm {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 52px;
+  padding: 4px 4px 4px 24px;
+  border: 1px solid var(--iapteca-border);
+  border-radius: 12px;
+  background: var(--iapteca-surface);
+}
+
+.searchForm > img {
+  flex: 0 0 20px;
+}
+
+.searchForm input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--iapteca-text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.searchForm input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.searchForm:focus-within {
+  border-color: var(--iapteca-primary);
+  box-shadow: 0 0 0 3px rgb(0 86 210 / 14%);
+}
+
+.searchButton {
+  flex: 0 0 112px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--iapteca-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.searchButton:hover {
+  background: var(--iapteca-primary-hover);
+}
+
+.searchButton:focus-visible,
+.searchChips a:focus-visible,
+.sectionLink:focus-visible,
+.categoryCard:focus-visible,
+.kitImageLink:focus-visible,
+.kitName:focus-visible,
+.kitAction:focus-visible {
+  outline: 3px solid rgb(0 86 210 / 35%);
+  outline-offset: 3px;
+}
+
+.popularSearches {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  color: var(--iapteca-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.searchChips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.searchChips a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid #0070f4;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 3px rgb(10 43 99 / 8%);
+  color: var(--iapteca-primary-hover);
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+  transition: background-color 140ms ease;
+}
+
+.searchChips a:hover {
+  background: #f5f9ff;
+}
+
+.content {
+  padding-bottom: 40px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 40px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 30px;
+}
+
+.sectionHeading h2 {
+  margin: 0;
+  color: var(--iapteca-text);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.sectionLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex: 0 0 auto;
+  color: var(--iapteca-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  text-decoration: none;
+}
+
+.sectionLink:hover {
+  color: var(--iapteca-primary-hover);
+}
+
+.productGrid,
+.kitGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.emptyProducts {
+  padding: 32px;
+  border: 1px solid var(--iapteca-border);
+  border-radius: 16px;
+  background: var(--iapteca-surface);
+  color: var(--iapteca-text-secondary);
+  text-align: center;
+}
+
+.emptyProducts p {
+  margin: 0 0 12px;
+}
+
+.emptyProducts a {
+  color: var(--iapteca-primary);
+  font-weight: 600;
+}
+
+.kitCard {
+  display: flex;
+  min-width: 0;
+  height: 346px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #deebf7;
+  border-radius: 16px;
+  background: var(--iapteca-surface);
+  box-shadow: none;
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.kitCard:hover {
+  box-shadow: 0 6px 18px rgb(17 41 73 / 9%);
+  transform: translateY(-2px);
+}
+
+.kitImageLink {
+  position: relative;
+  display: block;
+  flex: 0 0 160px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.kitImageLink img {
+  object-fit: contain;
+}
+
+.kitDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.kitName {
+  display: block;
+  min-height: 20px;
+  overflow: hidden;
+  color: var(--iapteca-heading);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kitName:hover {
+  color: var(--iapteca-primary);
+}
+
+.kitSummary {
+  overflow: hidden;
+  margin: 0;
+  color: var(--iapteca-text-secondary);
+  font-size: 14px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.availability {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--iapteca-success-ink);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.availability img {
+  flex: 0 0 8px;
+}
+
+.kitFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.kitFooter strong {
+  color: var(--iapteca-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+}
+
+.kitAction {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ebf2ff;
+  transition: background-color 140ms ease;
+}
+
+.kitAction:hover {
+  background: #dce9ff;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 190px);
+  justify-content: space-between;
+  gap: 12px 10px;
+}
+
+.categoryCard {
+  display: flex;
+  min-width: 0;
+  height: 100px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: #14263e;
+  text-decoration: none;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.categoryCard:hover {
+  transform: translateY(-1px);
+}
+
+.categoryCard > img:first-child {
+  flex: 0 0 40px;
+}
+
+.categoryCard > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.categoryArrow {
+  align-self: flex-end;
+  flex: 0 0 16px;
+  margin-bottom: 2px;
+}
+
+.cold { background: #e9f5fc; border-color: #bfe7fc; }
+.cold:hover { border-color: #6bc8f2; }
+.pain { background: #ecf9f8; border-color: #c4eee8; }
+.pain:hover { border-color: #78d7c9; }
+.digestive { background: #e8f3ff; border-color: #ccdfff; }
+.digestive:hover { border-color: #8bb8f3; }
+.cardiovascular { background: #fff1f3; border-color: #ffd7e0; }
+.cardiovascular:hover { border-color: #f6a5b7; }
+.vitamins { background: #ecf8f0; border-color: #caeed8; }
+.vitamins:hover { border-color: #8dd6a8; }
+.dermatology { background: #eaf5ff; border-color: #cbe6fc; }
+.dermatology:hover { border-color: #83c6f2; }
+
+.benefitsSection {
+  padding-bottom: 0;
+}
+
+.benefitStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
+  gap: 16px;
+  min-height: 106px;
+  padding: 20px;
+  border: 1px solid #e4ecf5;
+  border-radius: 16px;
+  background: var(--iapteca-surface);
+}
+
+.benefit {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.benefitIcon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  background: #f2f6fc;
+}
+
+.benefitText {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.benefitText strong {
+  color: var(--iapteca-heading);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.benefitText > span {
+  color: var(--iapteca-text-secondary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+@media (max-width: 1240px) {
+  .heroTitle {
+    font-size: clamp(40px, 4vw, 49px);
+  }
+}
+
+@media (max-width: 1050px) {
+  .categoryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .productGrid,
+  .kitGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .benefitStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

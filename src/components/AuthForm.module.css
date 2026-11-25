@@ -1,0 +1,32 @@
+.page { display: flex; min-height: 640px; justify-content: center; align-items: flex-start; padding: 60px 24px; }
+.registrationPage { min-height: 726px; padding-block: 89px; }
+.card { position: relative; width: 480px; min-height: 520px; padding: 36px 32px; border: 1px solid var(--iapteca-border); border-radius: 16px; background: var(--iapteca-surface); display: flex; flex-direction: column; gap: 20px; }
+.registrationCard { min-height: 548px; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--iapteca-border); }
+.tabs a { display: grid; min-height: 46px; place-items: center; font-size: 14px; color: var(--iapteca-text); border-bottom: 2px solid transparent; text-decoration: none; }
+.tabs a[aria-current] { background: var(--iapteca-background); color: var(--iapteca-primary); border-bottom-color: var(--iapteca-primary); }
+.heading { text-align: center; display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
+.heading h1 { margin: 0; color: var(--iapteca-heading); font-size: 24px; font-weight: 600; line-height: normal; }
+.heading p { margin: 0; color: var(--iapteca-muted); font-size: 14px; line-height: normal; }
+.form { display: flex; flex-direction: column; gap: 20px; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field label { color: var(--iapteca-text); font-size: 14px; line-height: 20px; font-weight: 500; }
+.input { height: 52px; border: 1px solid var(--iapteca-border); border-radius: 12px; background: var(--iapteca-surface); padding-inline: 16px; color: var(--iapteca-text); font-size: 14px; box-shadow: none; }
+.passwordField { position: relative; }
+.passwordInput { padding-right: 52px; }
+.passwordToggle { position: absolute; top: 6px; right: 6px; display: grid; width: 40px; height: 40px; padding: 0; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--iapteca-muted); cursor: pointer; }
+.passwordToggle:disabled { cursor: not-allowed; }
+.passwordToggle:focus-visible { outline: 2px solid var(--iapteca-primary); outline-offset: 1px; }
+.input[aria-invalid=true] { border-color: var(--iapteca-error); }
+.help, .error { margin: 0; font-size: 14px; line-height: 18px; }
+.help { color: var(--iapteca-muted); }
+.error { color: var(--iapteca-error-ink); }
+.banner { margin: 0; padding: 12px; color: var(--iapteca-error-ink); border: 1px solid #f8c5c1; border-radius: 10px; background: var(--iapteca-error-surface); font-size: 14px; line-height: 20px; }
+.forgot { color: var(--iapteca-primary); font-size: 14px; line-height: 18px; text-align: right; text-decoration: none; }
+.forgot:hover { text-decoration: underline; }
+.consent { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 20px; color: var(--iapteca-text-secondary); cursor: pointer; }
+.consent input { width: 20px; height: 20px; flex: 0 0 20px; accent-color: var(--iapteca-primary); }
+.submit { min-height: 48px; border: 0; border-radius: 12px; background: var(--iapteca-primary); color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+.submit:hover:not(:disabled) { background: var(--iapteca-primary-hover); }
+.submit:disabled { background: #d7e2ee; color: #546b8f; cursor: not-allowed; }
+.tabs a:focus-visible, .forgot:focus-visible, .submit:focus-visible, .consent input:focus-visible { outline: 3px solid var(--iapteca-primary); outline-offset: 3px; }

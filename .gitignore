@@ -32,6 +32,16 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# Local MongoDB credentials, key files, data and backups
+/.local/
+/mongo-data/
+/backups/
+*.dump
+*.bson
+*.bson.gz
+*.archive
 
 # vercel
 .vercel
@@ -40,8 +50,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Kubernetes Secret manifests - keep local only
-k8s/*secret*.yaml
-
-# Kubernetes Secret manifests - local only
+# Local secret manifests (never commit credentials)
 *secret*.yaml
