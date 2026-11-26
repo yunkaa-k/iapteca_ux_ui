@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CatalogSearch } from '@/components/CatalogSearch';
 import { useSearchHistoryStore } from '@/lib/store/searchHistoryStore';
@@ -52,6 +52,19 @@ describe('catalog suggestions', () => {
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
     expect(input()).toHaveFocus();
     expect(input()).toHaveAttribute('aria-expanded', 'false');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('removes one recent query without removing the rest of the history', () => {
+    useSearchHistoryStore.getState().remember('парацетамол');
+    useSearchHistoryStore.getState().remember('ібупрофен');
+    render(<CatalogSearch initialValue="" disabled={false} {...actions} />);
+    act(() => input().focus());
+    fireEvent.click(screen.getByRole('button', { name: 'Видалити запит: ібупрофен' }));
+    expect(useSearchHistoryStore.getState().queries).toEqual(['парацетамол']);
+    const recent = screen.getByRole('heading', { name: 'НЕЩОДАВНІ ПОШУКИ' }).closest('section')!;
+    fireEvent.click(within(recent).getByRole('button', { name: 'парацетамол' }));
+    expect(actions.onSearch).toHaveBeenCalledWith('парацетамол');
     expect(fetch).not.toHaveBeenCalled();
   });
 

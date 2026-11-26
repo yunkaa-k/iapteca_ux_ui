@@ -111,15 +111,15 @@ export function CatalogSearch({ initialValue, disabled, onSearch, onCategory, on
         <button className={styles.submit} type="submit" disabled={disabled}>Знайти</button>
       </form>
 
-      {open && !disabled && <div ref={panel} id="catalog-suggestions" className={`${styles.panel} ${data?.products.length ? styles.productPanel : ''}`} role="dialog" aria-label="Підказки пошуку" onKeyDown={(event) => keys(event)}>
+      {open && !disabled && <div ref={panel} id="catalog-suggestions" className={`${styles.panel} ${query.length < 2 ? styles.initialPanel : data?.products.length ? styles.productPanel : ''}`} role="dialog" aria-label="Підказки пошуку" onKeyDown={(event) => keys(event)}>
         {query.length < 2 ? (
           <>
             <section className={styles.section}>
               <div className={styles.sectionHeading}><h2>НЕЩОДАВНІ ПОШУКИ</h2>{hydrated && history.length > 0 && <button className={styles.textButton} type="button" onClick={clearHistory}>Очистити</button>}</div>
-              {hydrated && history.length > 0 ? history.map((term) => <div key={term} className={styles.recentRow}><SearchChoice onClick={() => chooseSearch(term)}>{term}</SearchChoice><button className={styles.remove} type="button" aria-label={`Видалити запит: ${term}`} onClick={() => remove(term)}>×</button></div>) : <p className={styles.muted}>Ви ще нічого не шукали.</p>}
+              <div className={styles.recentList}>{hydrated && history.length > 0 ? history.map((term, index) => <div key={term} className={styles.recentRow}><SearchChoice className={styles.recentChoice} onClick={() => chooseSearch(term)}><Image src={index === 0 ? '/images/catalog/recent-active.svg' : '/images/catalog/recent.svg'} alt="" width={18} height={18} /><span>{term}</span></SearchChoice><button className={styles.remove} type="button" aria-label={`Видалити запит: ${term}`} onClick={() => remove(term)}><Image src="/images/catalog/search-remove.svg" alt="" width={16} height={16} /></button></div>) : <p className={styles.muted}>Ви ще нічого не шукали.</p>}</div>
             </section>
             <PopularQueries heading="ПОПУЛЯРНЕ ЗАРАЗ" onChoose={chooseSearch} />
-            <section className={styles.section}><h2>ШУКАТИ ЗА СИМПТОМОМ</h2><div className={styles.symptoms}>{symptomCategories.map((item) => <SearchChoice key={item.title} className={styles.symptom} onClick={() => { close(); onCategory(item.category); }}><strong>{item.title}</strong>{' '}<span>{item.detail}</span></SearchChoice>)}</div></section>
+            <section className={styles.section}><h2>ШУКАТИ ЗА СИМПТОМОМ</h2><div className={styles.symptoms}>{symptomCategories.map((item) => <SearchChoice key={item.title} className={styles.symptom} onClick={() => { close(); onCategory(item.category); }}><Image src={`/images/catalog/symptom-${item.icon}.svg`} alt="" width={20} height={20} /><strong>{item.title}</strong>{' '}<span>{item.detail}</span></SearchChoice>)}</div></section>
           </>
         ) : !current ? <p className={styles.message} role="status">Шукаємо підказки…</p> : current.failed ? (
           <div className={styles.message}><p role="alert">Не вдалося завантажити підказки.</p><button className={styles.textButton} type="button" onClick={() => setRetry((attempt) => attempt + 1)}>Спробувати ще раз</button></div>

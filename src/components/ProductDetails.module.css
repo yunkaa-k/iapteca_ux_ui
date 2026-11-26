@@ -40,7 +40,7 @@
 .buyRow { display: flex; gap: 12px; align-items: center; }
 .quantity { display: flex; align-items: center; justify-content: space-between; flex: 0 0 144px; min-height: 48px; border: 1px solid var(--iapteca-border); border-radius: 12px; }
 .quantity button { width: 40px; min-height: 44px; color: var(--iapteca-primary); cursor: pointer; }
-.primary, .secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border-radius: 12px; font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.primary, .secondary { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 24px; border-radius: 12px; font: inherit; font-size: 16px; line-height: 22px; font-weight: 600; text-decoration: none; cursor: pointer; }
 .primary { background: var(--iapteca-primary); color: white; flex: 1; text-align: center; }
 .primary:hover:not(:disabled) { background: var(--iapteca-primary-hover); }
 .secondary { background: #ebf2ff; color: var(--iapteca-primary); border: 1px solid var(--iapteca-border); }

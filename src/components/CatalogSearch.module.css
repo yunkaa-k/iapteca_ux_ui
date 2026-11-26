@@ -18,10 +18,22 @@
 .sectionHeading { display: flex; justify-content: space-between; gap: 16px; }
 .textButton { color: var(--iapteca-primary); font-size: 14px; cursor: pointer; }
 .textButton:hover { text-decoration: underline; }
-.recentRow { display: flex; align-items: center; gap: 8px; }
+.initialPanel { display: flex; flex-direction: column; gap: 24px; padding: 24px; }
+.initialPanel .section { padding: 0; }
+.initialPanel .section + .section { padding-top: 24px; }
+.initialPanel h2 { font-weight: 500; letter-spacing: 0; }
+.initialPanel .sectionHeading { min-height: 22px; align-items: center; }
+.initialPanel .sectionHeading h2 { margin: 0; }
+.initialPanel .textButton { font-size: 12px; line-height: 18px; }
+.recentList { display: flex; flex-direction: column; gap: 4px; margin-top: 24px; }
+.recentRow { display: flex; align-items: center; gap: 8px; min-height: 44px; padding-inline: 12px; border-radius: 8px; }
+.recentRow:first-child, .recentRow:hover { background: var(--secondary); }
+.recentChoice { display: flex; align-items: center; flex: 1; min-width: 0; min-height: 44px; gap: 8px; text-align: left; font-size: 14px; line-height: 22px; font-weight: 500; color: var(--iapteca-text); cursor: pointer; }
+.recentChoice img { flex: 0 0 18px; }
+.recentChoice span { overflow-wrap: anywhere; }
 .choice { display: block; min-height: 40px; width: 100%; text-align: left; padding: 10px 8px; color: var(--iapteca-heading); border-radius: 8px; font-size: 14px; line-height: 20px; cursor: pointer; }
 .choice:hover { background: #f4f7f9; }
-.remove { width: 32px; height: 32px; flex: 0 0 32px; color: var(--iapteca-muted); font-size: 20px; cursor: pointer; border-radius: 50%; }
+.remove { display: grid; place-items: center; width: 28px; height: 28px; flex: 0 0 28px; color: var(--iapteca-muted); cursor: pointer; border-radius: 50%; }
 .remove:hover { background: #ebf2ff; }
 .muted, .message { color: var(--iapteca-text-secondary); font-size: 14px; line-height: 22px; margin: 0; }
 .message { padding: 24px; }
@@ -34,6 +46,11 @@
 .symptom:hover { background: #f4f7f9; border-color: #91b7eb; }
 .symptom strong { color: var(--iapteca-heading); font-size: 14px; font-weight: 600; line-height: 20px; }
 .symptom > span { color: var(--iapteca-muted); font-size: 13px; line-height: 18px; }
+.initialPanel .chips { gap: 12px; }
+.initialPanel .chip { border-color: var(--iapteca-primary); color: var(--iapteca-primary); font-weight: 400; }
+.initialPanel .symptom { min-height: 114px; gap: 10px; }
+.initialPanel .symptom strong { font-weight: 500; line-height: 22px; }
+.initialPanel .symptom > span { font-size: 12px; font-weight: 500; }
 .productPanel { width: 100%; padding: 24px; }
 .columns { display: grid; grid-template-columns: minmax(0, 400fr) minmax(0, 768fr); gap: 24px; }
 .queries { padding-right: 24px; border-right: 1px solid var(--iapteca-border); }

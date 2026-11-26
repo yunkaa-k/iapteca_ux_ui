@@ -5,8 +5,8 @@
 .heading h1 { margin: 0; font-size: 32px; line-height: normal; font-weight: 700; }
 .heading p { margin: 0; font-size: 15px; color: var(--iapteca-muted); line-height: 25.5px; }
 .grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; }
-.card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 306px; min-width: 0; padding: 20px; border-radius: 16px; background: var(--iapteca-surface); color: var(--iapteca-text); box-shadow: 0 4px 10px rgb(0 0 0 / 5%); }
-.card:hover { box-shadow: inset 0 0 0 1px var(--iapteca-border), 0 4px 10px rgb(0 0 0 / 5%); }
+.card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 306px; min-width: 0; padding: 20px; border-radius: 16px; background: var(--iapteca-surface); color: var(--iapteca-text); box-shadow: 0 4px 20px rgb(0 0 0 / 5%); }
+.card:hover { box-shadow: 0 8px 24px rgb(0 0 0 / 12%); }
 .cardImage { position: relative; display: block; width: 100%; height: 120px; flex-shrink: 0; border-radius: 10px; }
 .cardImage img { object-fit: contain; border-radius: 10px; }
 .cardDetails { display: flex; flex-direction: column; gap: 8px; width: 100%; }

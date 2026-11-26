@@ -58,10 +58,19 @@ const text = (params: URLSearchParams, key: string) => (params.get(key) || '').t
 const price = (value: string | null) => value !== null && value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 ? Math.min(Number(value), 10000000) : undefined;
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// A query such as "парацетамол №10" may omit the dosage between the words.
+// Every term stays literal; package numbers must not also match №100, etc.
+export function catalogSearchPattern(search: string) {
+  return search.trim().replace(/№\s+(?=\d)/gu, '№').split(/\s+/u).map(term => {
+    const pack = term.match(/^№(\d+)$/u);
+    return pack ? `№\\s*${pack[1]}(?!\\d)` : escapeRegex(term);
+  }).join('.*?');
+}
+
 export function catalogQuery(params: URLSearchParams, defaultLimit = 20) {
   const search = text(params, 'search');
   const filter: Record<string, unknown> = { isDeleted: { $ne: true }, inventoryOnly: { $ne: true } };
-  if (search) filter.$or = ['name', 'activeIngredient'].map((key) => ({ [key]: { $regex: escapeRegex(search), $options: 'i' } }));
+  if (search) filter.$or = ['name', 'activeIngredient'].map((key) => ({ [key]: { $regex: catalogSearchPattern(search), $options: 'i' } }));
   if (text(params, 'category')) filter.category = text(params, 'category');
   if (params.get('inStock') === 'true') filter.stock = { $gt: 0 };
   for (const { key } of catalogSelects) if (text(params, key)) filter[key] = text(params, key);

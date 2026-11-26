@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { catalogAgeOptions, catalogQuery, catalogResultCount, toSearchParams } from '@/lib/catalog';
+import { catalogAgeOptions, catalogQuery, catalogResultCount, catalogSearchPattern, toSearchParams } from '@/lib/catalog';
 
 describe('catalog queries', () => {
   it.each([
@@ -25,12 +25,22 @@ describe('catalog queries', () => {
     expect(new RegExp(adult.$regex, adult.$options).test('Дорослим; досвіду застосування дітям немає.')).toBe(true);
     expect(catalogQuery(new URLSearchParams({ ageGroup: 'Від 12 років.' })).filter.ageGroup).toBe('Від 12 років.');
   });
-  it('uses literal search text and searches names and active ingredients', () => {
+  it('uses literal search terms and searches names and active ingredients', () => {
     const { filter } = catalogQuery(new URLSearchParams({ search: 'ліки (200) [A]+.*' }));
     expect(filter.$or).toEqual([
-      { name: { $regex: 'ліки \\(200\\) \\[A\\]\\+\\.\\*', $options: 'i' } },
-      { activeIngredient: { $regex: 'ліки \\(200\\) \\[A\\]\\+\\.\\*', $options: 'i' } },
+      { name: { $regex: 'ліки.*?\\(200\\).*?\\[A\\]\\+\\.\\*', $options: 'i' } },
+      { activeIngredient: { $regex: 'ліки.*?\\(200\\).*?\\[A\\]\\+\\.\\*', $options: 'i' } },
     ]);
+  });
+
+  it('finds package suggestions across omitted dosage without matching a different package', () => {
+    const pattern = new RegExp(catalogSearchPattern('парацетамол №10'), 'i');
+    expect(pattern.test('Парацетамол 500 мг №10')).toBe(true);
+    expect(pattern.test('Парацетамол 500 мг №100')).toBe(false);
+    expect(pattern.test('Парацетамол 500 мг №20')).toBe(false);
+    expect(pattern.test('Нурофен 200 мг №10')).toBe(false);
+    expect(new RegExp(catalogSearchPattern('  парацетамол   № 10 '), 'i').test('Парацетамол 500 мг № 10')).toBe(true);
+    expect(catalogQuery(new URLSearchParams({ search: 'парацетамол №10' })).hasFilters).toBe(false);
   });
 
   it('combines category, multiple forms, numeric pack sizes and price', () => {

@@ -135,7 +135,7 @@ export function SearchAndFilters({ facets, categories, total, children, queryStr
       </div>
       <div className={styles.layout}>
         <aside className={styles.sidebar} aria-label="Фільтри каталогу">
-          <div className={styles.filterHeading}><h2>Фільтри</h2><button className={styles.textButton} type="button" disabled={pending || !chips.length} onClick={resetFilters}>Скинути</button></div>
+          <div className={styles.filterHeading}><h2>Фільтри</h2><button className={styles.textButton} type="button" disabled={pending || !chips.length} onClick={resetFilters}>Скинути фільтри</button></div>
           <div className={styles.group}><label htmlFor="catalog-category">Категорія</label><CatalogSelect id="catalog-category" label="Категорія" value={params.get('category') || ''} placeholder="Усі категорії" options={orderedCategories.map((category) => ({ value: category.name, label: category.name }))} onChange={(value) => navigate({ category: value })} disabled={pending} /></div>
           <fieldset className={styles.group}><legend>Лікарська форма</legend>{dosageForms.map((form) => checkRow('form', form.value, `${form.label} (${facets.forms[form.value] || 0})`))}</fieldset>
           <fieldset className={styles.group}><legend>Наявність</legend>{checkRow('inStock', 'true', 'Лише в наявності')}</fieldset>

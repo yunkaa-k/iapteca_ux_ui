@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { findSpellingCorrection, spellingDistance } from '@/lib/searchSuggestions';
+import { findSpellingCorrection, spellingDistance, suggestedQueries } from '@/lib/searchSuggestions';
 import { useSearchHistoryStore } from '@/lib/store/searchHistoryStore';
 import { GET } from '@/app/api/search/suggestions/route';
 import { connectDB, MedicationModel } from '@/lib/db';
@@ -10,6 +10,15 @@ const request = (q: string) => new Request(`http://localhost/api/search/suggesti
 
 beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); useSearchHistoryStore.setState({ queries: [] }); });
 afterEach(() => vi.restoreAllMocks());
+
+describe('suggested query labels', () => {
+  it('completes a partial brand using the actual product name', () => {
+    expect(suggestedQueries('нуроф', [{ _id: 'n', name: 'Нурофен 200 мг №24', price: 145, stock: 1, dosage: '200 мг', packSize: 24 }], [])).toEqual(['нурофен', 'нурофен 200 мг', 'нурофен №24']);
+  });
+  it('does not suggest a combination strength absent from searchable product text', () => {
+    expect(suggestedQueries('цитра', [{ _id: 'c', name: 'Цитрамон-Дарниця №10', price: 52, stock: 1, dosage: '240 мг + 180 мг + 30 мг', packSize: 10 }], [])).toEqual(['цитрамон-дарниця', 'цитрамон-дарниця №10']);
+  });
+});
 
 describe('spelling correction from the catalog dictionary', () => {
   it('handles replacement and adjacent transposition', () => {

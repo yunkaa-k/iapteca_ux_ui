@@ -1,3 +1,5 @@
+import { catalogSearchPattern } from './catalog';
+
 export interface SearchProduct {
   _id: string;
   name: string;
@@ -16,8 +18,12 @@ export interface SearchProduct {
 export function suggestedQueries(query: string, products: SearchProduct[], ingredients: string[]) {
   const ingredient = ingredients.find(value => !/[,;+]/.test(value));
   const product = products.find(value => ingredient && value.activeIngredient === ingredient) || products[0];
-  const base = ingredient?.toLocaleLowerCase('uk-UA') || query;
-  return [...new Set([base, ...(product?.dosage ? [`${base} ${product.dosage}`] : []), ...(product?.packSize ? [`${base} №${product.packSize}`] : [])])].slice(0, 3);
+  const base = (ingredient || product?.name.replace(/\s+(?:\d|№).*$/u, '').trim() || query).toLocaleLowerCase('uk-UA');
+  const candidates = [base, ...(product?.dosage ? [`${base} ${product.dosage}`] : []), ...(product?.packSize ? [`${base} №${product.packSize}`] : []), ...products.map(item => item.name.toLocaleLowerCase('uk-UA'))];
+  return [...new Set(candidates)].filter(term => {
+    const pattern = new RegExp(catalogSearchPattern(term), 'i');
+    return products.some(item => pattern.test(item.name) || pattern.test(item.activeIngredient || ''));
+  }).slice(0, 3);
 }
 
 export interface SearchSuggestions {
@@ -28,10 +34,10 @@ export interface SearchSuggestions {
 
 export const popularQueries = ['ібупрофен', 'парацетамол', 'амокислав', 'дексаметазон', 'бісептол'];
 export const symptomCategories = [
-  { title: 'Біль', detail: 'Голова, зуби, м’язи', category: 'Біль і запалення' },
-  { title: 'Застуда та грип', detail: 'Температура, кашель', category: 'Застуда та грип' },
-  { title: 'Травлення', detail: 'Шлунок, кишечник', category: 'Шлунково-кишковий тракт' },
-  { title: 'Серце і тиск', detail: 'Серцево-судинні', category: 'Серцево-судинні' },
+  { title: 'Біль', detail: 'Голова, зуби, м’язи', category: 'Біль і запалення', icon: 'pain' },
+  { title: 'Застуда та грип', detail: 'Температура, кашель', category: 'Застуда та грип', icon: 'cold' },
+  { title: 'Травлення', detail: 'Шлунок, кишечник', category: 'Шлунково-кишковий тракт', icon: 'digestive' },
+  { title: 'Серце і тиск', detail: 'Серцево-судинні', category: 'Серцево-судинні', icon: 'heart' },
 ];
 
 const normalized = (text: string) => text.normalize('NFKC').toLocaleLowerCase('uk-UA').trim();
